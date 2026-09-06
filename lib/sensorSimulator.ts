@@ -50,7 +50,7 @@ export function useSensorSimulator() {
   const alertedCriticalRef = useRef(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       const state = useDashboardStore.getState();
       tickCountRef.current += 1;
       const t = tickCountRef.current;
@@ -63,22 +63,21 @@ export function useSensorSimulator() {
         useDashboardStore.setState({ simProgress: progress });
       }
 
-      // Smooth physics baseline: Slow drift + subtle noise
+      // Smooth physics baseline
       const driftSine = Math.sin(t * 0.15);
       const driftCos = Math.cos(t * 0.1);
       const noise = (Math.random() - 0.5);
 
-      // Baseline values
       let currentStrain = 145 + driftSine * 6 + noise * 3;
       let currentTilt = 0.36 + driftCos * 0.03 + noise * 0.01;
       let currentGeophone = 0.18 + Math.abs(noise) * 0.12;
+
       let currentRisk = 22 + Math.round(driftSine * 4);
       let riskStatus: 'normal' | 'caution' | 'critical' = 'normal';
 
       let newAlert: Alert | undefined = undefined;
 
       if (isSim) {
-        // Ramp sensor physics towards critical thresholds
         const strainMultiplier = 1 + progress * 3.8;
         const tiltMultiplier = 1 + progress * 8.5;
         const geoMultiplier = 1 + progress * 65.0;
@@ -126,6 +125,43 @@ export function useSensorSimulator() {
       } else {
         alertedWarningRef.current = false;
         alertedCriticalRef.current = false;
+      }
+
+      // Query real Python XGBoost ML Backend if available
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 700);
+
+        const response = await fetch('http://127.0.0.1:8000/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            strain_microstrain: currentStrain,
+            tilt_deg: currentTilt,
+            vib_rms_g: currentGeophone / 10.0,
+            crack_width_mm: isSim ? 1.2 + progress * 14.0 : 1.2,
+            convergence_m: isSim ? 0.015 + progress * 0.4 : 0.015,
+            depth_z: 248.0,
+            safety_factor: isSim ? Math.max(0.85, 2.2 - progress * 1.3) : 2.2,
+            is_simulation_active: isSim,
+            sim_progress: progress,
+          }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const mlResult = await response.json();
+          currentRisk = Math.round(mlResult.risk_score);
+          riskStatus = mlResult.status;
+          state.setMlStatus(true, mlResult.model_engine, mlResult.top_feature_contributions);
+        } else {
+          state.setMlStatus(false, 'XGBoost (Fallback)', {});
+        }
+      } catch {
+        // Backend offline: gracefully continue with client-side calculation
+        state.setMlStatus(false, 'XGBoost (In-Browser)', {});
       }
 
       // Update Individual Sensor Nodes

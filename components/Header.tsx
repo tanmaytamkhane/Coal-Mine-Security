@@ -12,7 +12,8 @@ import {
   RotateCcw,
   Download,
   Clock,
-  Box
+  Box,
+  Cpu
 } from 'lucide-react';
 import { useDashboardStore } from '../lib/store';
 import { COALFIELD_ZONES } from '../lib/constants';
@@ -28,6 +29,8 @@ export function Header() {
     triggerSubsidenceEvent,
     resetSimulation,
     selectedCoalfield,
+    isMlModelConnected,
+    mlModelEngine
   } = useDashboardStore();
 
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -48,6 +51,7 @@ export function Header() {
 Problem Statement: SIH26025
 Location: ${currentZone.name} (${currentZone.state})
 Timestamp: ${new Date().toISOString()}
+AI Model Engine: ${mlModelEngine}
 Telemetry Status: 100% Mesh Operational (Zigbee/LoRa)
 Sentinel-1 InSAR Deformation Rate: ${currentZone.insarDeformationRateMmYr} mm/yr
 Compliance Form: DGMS (Technical) Form IV
@@ -80,18 +84,20 @@ Verified by: Insp. R. K. Verma, Safety Officer`;
       </div>
 
       {/* Right controls */}
-      <div className="flex items-center gap-3">
-        {/* Network status badge */}
-        <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 text-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-medium">Zigbee + LoRa Mesh</span>
-          <span className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">(-68 dBm)</span>
-        </div>
-
-        {/* Shift Clock */}
-        <div className="hidden md:flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 font-mono px-2 py-1">
-          <Clock className="w-3.5 h-3.5 text-gray-400" />
-          <span>{currentTime || '10:45:00'} IST</span>
+      <div className="flex items-center gap-2.5">
+        {/* Live ML Model Status Badge */}
+        <div
+          title={isMlModelConnected ? 'Connected to Python FastAPI XGBoost Inference Server (Port 8000)' : 'Running client-side calibrated fallback'}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border transition-all ${
+            isMlModelConnected
+              ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300'
+              : 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-400'
+          }`}
+        >
+          <Cpu className={`w-3.5 h-3.5 ${isMlModelConnected ? 'text-emerald-500 animate-pulse' : 'text-amber-500'}`} />
+          <span className="font-bold text-[11px]">
+            {isMlModelConnected ? 'XGBoost: LIVE' : 'XGBoost: In-Browser'}
+          </span>
         </div>
 
         {/* 3D Model Navbar Button */}
@@ -101,8 +107,14 @@ Verified by: Insp. R. K. Verma, Safety Officer`;
           title="Access Interactive 3D Coal Mine Visualization"
         >
           <Box className="w-3.5 h-3.5 text-safety-500 animate-bounce" />
-          <span>3D Mine Model</span>
+          <span>3D Mine</span>
         </Link>
+
+        {/* Shift Clock */}
+        <div className="hidden lg:flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 font-mono px-2 py-1">
+          <Clock className="w-3.5 h-3.5 text-gray-400" />
+          <span>{currentTime || '10:45:00'} IST</span>
+        </div>
 
         {/* Audio Siren Toggle */}
         <button

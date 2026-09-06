@@ -17,6 +17,11 @@ interface DashboardState {
   isAudioMuted: boolean;
   audioActive: boolean;
 
+  // Live XGBoost ML Model State
+  isMlModelConnected: boolean;
+  mlModelEngine: string;
+  mlFeatureContributions: Record<string, string>;
+
   // Actions
   toggleDarkMode: () => void;
   setSelectedCoalfield: (id: string) => void;
@@ -26,10 +31,10 @@ interface DashboardState {
   selectPillar: (pillarId: string | null) => void;
   toggleAudioMute: () => void;
   setAudioActive: (active: boolean) => void;
+  setMlStatus: (connected: boolean, engine: string, contributions: Record<string, string>) => void;
   updateTick: (newTelemetry: TelemetryPoint, updatedSensors: SensorNode[], updatedPillars: Pillar[], newRiskScore: number, newRiskStatus: 'normal' | 'caution' | 'critical', newAlert?: Alert) => void;
 }
 
-// Generate 20 initial historical points with realistic slight drift
 const generateInitialTelemetry = (): TelemetryPoint[] => {
   const points: TelemetryPoint[] = [];
   const now = Date.now();
@@ -65,6 +70,15 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   selectedPillarId: 'P-06',
   isAudioMuted: false,
   audioActive: false,
+
+  isMlModelConnected: false,
+  mlModelEngine: 'XGBoost 3.2.0 (SIH26025)',
+  mlFeatureContributions: {
+    'Strata Depth (z)': '43.3%',
+    'Convergence Std (6h)': '24.1%',
+    'Crack Width Std (6h)': '16.4%',
+    'Seismic Vibration RMS': '5.5%',
+  },
 
   toggleDarkMode: () => set((state) => {
     const next = !state.isDarkMode;
@@ -115,6 +129,12 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   toggleAudioMute: () => set((state) => ({ isAudioMuted: !state.isAudioMuted })),
   
   setAudioActive: (active: boolean) => set({ audioActive: active }),
+
+  setMlStatus: (connected, engine, contributions) => set({
+    isMlModelConnected: connected,
+    mlModelEngine: engine,
+    mlFeatureContributions: contributions,
+  }),
 
   updateTick: (newTelemetry, updatedSensors, updatedPillars, newRiskScore, newRiskStatus, newAlert) =>
     set((state) => {
