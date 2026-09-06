@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
+  Box,
   MapPin,
   LineChart,
   BellRing,
@@ -21,6 +22,7 @@ export function Sidebar() {
 
   const navItems = [
     { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { label: '3D Mine Model', href: '/model', icon: Box, highlight: true },
     { label: 'Coalfield Map', href: '/map', icon: MapPin },
     { label: 'Telemetry Trends', href: '/trends', icon: LineChart },
     { label: 'Emergency Alerts', href: '/alerts', icon: BellRing, badge: unreadAlerts > 0 ? unreadAlerts : undefined },
@@ -68,16 +70,20 @@ export function Sidebar() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-500 dark:text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : item.highlight ? 'text-safety-500' : 'text-gray-500 dark:text-slate-400'}`} />
                     <span>{item.label}</span>
                   </div>
-                  {item.badge !== undefined && (
+                  {item.badge !== undefined ? (
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
                       isActive ? 'bg-white text-safety-600' : 'bg-red-500 text-white animate-pulse'
                     }`}>
                       {item.badge}
                     </span>
-                  )}
+                  ) : item.highlight && !isActive ? (
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-safety-50 dark:bg-safety-950 text-safety-600 dark:text-safety-400 border border-safety-200 dark:border-safety-800">
+                      3D
+                    </span>
+                  ) : null}
                 </Link>
               );
             })}

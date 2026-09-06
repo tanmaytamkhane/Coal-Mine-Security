@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Search,
   Moon,
@@ -10,7 +11,8 @@ import {
   Play,
   RotateCcw,
   Download,
-  Clock
+  Clock,
+  Box
 } from 'lucide-react';
 import { useDashboardStore } from '../lib/store';
 import { COALFIELD_ZONES } from '../lib/constants';
@@ -80,7 +82,7 @@ Verified by: Insp. R. K. Verma, Safety Officer`;
       {/* Right controls */}
       <div className="flex items-center gap-3">
         {/* Network status badge */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 text-xs">
+        <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 text-xs">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="font-medium">Zigbee + LoRa Mesh</span>
           <span className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">(-68 dBm)</span>
@@ -91,6 +93,16 @@ Verified by: Insp. R. K. Verma, Safety Officer`;
           <Clock className="w-3.5 h-3.5 text-gray-400" />
           <span>{currentTime || '10:45:00'} IST</span>
         </div>
+
+        {/* 3D Model Navbar Button */}
+        <Link
+          href="/model"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-safety-50 dark:bg-safety-950/60 hover:bg-safety-100 dark:hover:bg-safety-900/60 border border-safety-200 dark:border-safety-800 text-safety-600 dark:text-safety-400 text-xs font-bold transition-all shadow-sm"
+          title="Access Interactive 3D Coal Mine Visualization"
+        >
+          <Box className="w-3.5 h-3.5 text-safety-500 animate-bounce" />
+          <span>3D Mine Model</span>
+        </Link>
 
         {/* Audio Siren Toggle */}
         <button

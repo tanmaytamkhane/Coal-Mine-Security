@@ -1,35 +1,27 @@
 ﻿'use client';
 
 import React from 'react';
-import { Layers } from 'lucide-react';
+import Link from 'next/link';
+import { Layers, Box } from 'lucide-react';
 import { useDashboardStore } from '../lib/store';
 import { Pillar } from '../types';
 
 export function PillarGrid() {
   const { pillars, selectedPillarId, selectPillar } = useDashboardStore();
-  const selectedPillar = pillars.find(p => p.id === selectedPillarId) || pillars[5]; // P-06 default
+  const selectedPillar = pillars.find(p => p.id === selectedPillarId) || pillars[5];
 
   const getStatusBadge = (pillar: Pillar) => {
     if (pillar.status === 'critical' || pillar.factorOfSafety < 1.3) {
       return {
-        bg: 'bg-red-500 text-white',
-        border: 'border-red-500',
-        ring: 'ring-red-400',
         cellBg: 'bg-red-500/20 dark:bg-red-950/50 text-red-700 dark:text-red-300 border-red-300 dark:border-red-800',
       };
     }
     if (pillar.status === 'stressed' || pillar.factorOfSafety < 1.9) {
       return {
-        bg: 'bg-amber-500 text-white',
-        border: 'border-amber-500',
-        ring: 'ring-amber-400',
         cellBg: 'bg-amber-500/15 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800',
       };
     }
     return {
-      bg: 'bg-safety-500 text-white',
-      border: 'border-safety-500',
-      ring: 'ring-safety-400',
       cellBg: 'bg-safety-50 dark:bg-safety-950/30 text-gray-800 dark:text-slate-200 border-gray-200/80 dark:border-slate-800',
     };
   };
@@ -44,9 +36,13 @@ export function PillarGrid() {
             Room-and-Pillar Grid
           </h3>
         </div>
-        <span className="text-[11px] font-medium text-gray-500 dark:text-slate-400">
-          Seam XII • 248m Depth
-        </span>
+        <Link
+          href="/model"
+          className="text-xs font-bold text-safety-500 hover:text-safety-600 flex items-center gap-1 transition-colors"
+        >
+          <Box className="w-3.5 h-3.5" />
+          <span>3D View →</span>
+        </Link>
       </div>
 
       <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
