@@ -105,6 +105,11 @@ export function useSensorSimulator() {
 
         currentRisk = Math.min(96, Math.round(24 + progress * 72));
 
+        const failingPillarsText = state.simAnomalousPillarIds && state.simAnomalousPillarIds.length > 0
+          ? state.simAnomalousPillarIds.join(' / ')
+          : 'P-06 / P-10 / P-11';
+        const primaryPillar = state.simAnomalousPillarIds?.[0] || 'P-06';
+
         if (progress > 0.4 && progress < 0.75) {
           riskStatus = 'caution';
           if (!alertedWarningRef.current) {
@@ -114,7 +119,7 @@ export function useSensorSimulator() {
               id: `ALT-${Date.now().toString().slice(-4)}`,
               timestamp: 'Just now',
               title: 'CAUTION: Underground Strain Acceleration & Surface Crack Dilation',
-              message: `Pillar P-06 strain reached ${Math.round(currentStrain)} µε (BF350/HX711). Surface Linear Potentiometer detected ${surfDisp.toFixed(1)} mm ground subsidence.`,
+              message: `Pillar ${primaryPillar} strain reached ${Math.round(currentStrain)} µε (BF350/HX711). Surface Linear Potentiometer detected ${surfDisp.toFixed(1)} mm ground subsidence.`,
               severity: 'warning',
               nodeId: 'NODE-UG-BF350-01',
               coalfield: 'Jharia Colliery — Block IV',
@@ -131,7 +136,7 @@ export function useSensorSimulator() {
               id: `ALT-${Date.now().toString().slice(-4)}`,
               timestamp: 'Just now',
               title: 'CRITICAL EMERGENCY: Multi-Level Strata Subsidence Breach',
-              message: `Underground Pillar P-06 / P-11 yielded (FoS 0.91). Surface Potentiometer breached ${surfDisp.toFixed(1)} mm. Methane MQ-4 reached ${currentMethane.toFixed(2)}% LEL. Evacuate subterranean and surface danger perimeter.`,
+              message: `Underground Pillar ${failingPillarsText} yielded (FoS 0.91). Surface Potentiometer breached ${surfDisp.toFixed(1)} mm. Methane MQ-4 reached ${currentMethane.toFixed(2)}% LEL. Evacuate subterranean and surface danger perimeter.`,
               severity: 'critical',
               nodeId: 'NODE-SF-POT-01',
               coalfield: 'Jharia Colliery — Block IV',
@@ -249,7 +254,9 @@ export function useSensorSimulator() {
       // Update Pillar health status
       const updatedPillars: Pillar[] = state.pillars.map((pillar) => {
         if (!isSim) return pillar;
-        const isImpacted = pillar.id === 'P-06' || pillar.id === 'P-10' || pillar.id === 'P-11';
+        const isImpacted = state.simAnomalousPillarIds && state.simAnomalousPillarIds.length > 0
+          ? state.simAnomalousPillarIds.includes(pillar.id)
+          : (pillar.id === 'P-06' || pillar.id === 'P-10' || pillar.id === 'P-11');
         if (isImpacted) {
           const degradedFoS = Math.max(0.85, pillar.factorOfSafety - progress * 1.15);
           const elevatedStress = pillar.stressMpa + progress * 16.5;

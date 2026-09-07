@@ -12,6 +12,8 @@ import { AlertTriangle, RotateCcw, Flame, CheckCircle } from 'lucide-react';
 interface LeafletMapInnerProps {
   selectedZone: CoalfieldZone;
   showHeatmap?: boolean;
+  nodeVariantFilter?: 'all' | 'surface' | 'underground';
+  setNodeVariantFilter?: (filter: 'all' | 'surface' | 'underground') => void;
 }
 
 export interface ComputedSensorState {
@@ -197,20 +199,25 @@ function DynamicNodeHeatmapOverlay({
 // ---------------------------------------------------------------------------
 // 3. Map View Centering Helper
 // ---------------------------------------------------------------------------
-function ChangeMapView({ coords }: { coords: [number, number] }) {
+function ChangeMapView({ lat, lng }: { lat: number; lng: number }) {
   const map = useMap();
   useEffect(() => {
-    map.flyTo(coords, 14, { duration: 1.2 });
-  }, [coords, map]);
+    map.setView([lat, lng], 14);
+  }, [lat, lng, map]);
   return null;
 }
 
 // ---------------------------------------------------------------------------
 // 4. Main Leaflet Component Export
 // ---------------------------------------------------------------------------
-export default function LeafletMapInner({ selectedZone, showHeatmap = true }: LeafletMapInnerProps) {
+export default function LeafletMapInner({
+  selectedZone,
+  showHeatmap = true,
+  nodeVariantFilter = 'all',
+  setNodeVariantFilter,
+}: LeafletMapInnerProps) {
   const position: [number, number] = [selectedZone.lat, selectedZone.lng];
-  const { isSubsidenceSimActive, simProgress, resetSimulation } = useDashboardStore();
+  const { isSubsidenceSimActive, simProgress, resetSimulation, simAnomalousMapSensorIds } = useDashboardStore();
 
   const isJharia = selectedZone.id === 'jharia-block-4';
   const isDrillActive = isSubsidenceSimActive && isJharia;
@@ -268,12 +275,16 @@ export default function LeafletMapInner({ selectedZone, showHeatmap = true }: Le
       }
       // 3. Check Jharia emergency drill simulation progression
       else if (isDrillActive) {
+        const isRandomAnom = simAnomalousMapSensorIds && simAnomalousMapSensorIds.length > 0
+          ? simAnomalousMapSensorIds.includes(sensor.id)
+          : false;
+
         const distToSag = Math.hypot(sensorPos[0] - jhariaSagEpicenter[0], sensorPos[1] - jhariaSagEpicenter[1]);
 
-        if (distToSag <= ruptureRadius) {
+        if (isRandomAnom || distToSag <= ruptureRadius) {
           isAnomaly = true;
-          // Proximity factor: closest nodes get peak intensity (Yellow core)
-          const proximity = Math.max(0, 1 - distToSag / ruptureRadius);
+          // Proximity & severity factor
+          const proximity = isRandomAnom ? 0.85 : Math.max(0, 1 - distToSag / ruptureRadius);
           anomalyIntensity = Math.min(1.0, 0.45 + proximity * 0.55 * Math.min(1.0, 0.3 + simProgress * 0.9));
           liveReading = sensor.currentValue * (1 + anomalyIntensity * 3.8);
         }
@@ -295,11 +306,24 @@ export default function LeafletMapInner({ selectedZone, showHeatmap = true }: Le
         liveReading,
       };
     });
-  }, [rawSensors, isDrillActive, simProgress, selectedZone.lat, selectedZone.lng, manualAnomalies]);
+  }, [rawSensors, isDrillActive, simProgress, selectedZone.lat, selectedZone.lng, manualAnomalies, simAnomalousMapSensorIds]);
 
-  // Statistics for the legend HUD
-  const redNodeCount = computedSensors.filter((s) => s.isAnomaly).length;
-  const totalNodeCount = computedSensors.length;
+  // Statistics and Stratum Counts
+  const surfaceCount = computedSensors.filter((s) => s.sensor.domain === 'surface').length;
+  const undergroundCount = computedSensors.filter((s) => s.sensor.domain === 'underground').length;
+
+  const visibleSensors = useMemo(() => {
+    if (nodeVariantFilter === 'surface') {
+      return computedSensors.filter((s) => s.sensor.domain === 'surface');
+    }
+    if (nodeVariantFilter === 'underground') {
+      return computedSensors.filter((s) => s.sensor.domain === 'underground');
+    }
+    return computedSensors;
+  }, [computedSensors, nodeVariantFilter]);
+
+  const redNodeCount = visibleSensors.filter((s) => s.isAnomaly).length;
+  const totalNodeCount = visibleSensors.length;
 
   // Primary Focus mine center pin (Jharia gets golden safety-orange pulse)
   const centerIcon = L.divIcon({
@@ -320,22 +344,57 @@ export default function LeafletMapInner({ selectedZone, showHeatmap = true }: Le
     iconAnchor: [13, 13],
   });
 
-  // Sensor node pin: standard blue vs. pulsating red on emergency anomaly
-  const normalSensorIcon = L.divIcon({
-    className: 'custom-sensor-pin',
-    html: '<div style="background:#0ea5e9;width:14px;height:14px;border-radius:50%;border:2px solid #ffffff;box-shadow:0 2px 6px rgba(0,0,0,0.35);"></div>',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
+  // =========================================================================
+  // DUAL-VARIANT NODE ICONS: VISUALLY DISTINCT SURFACE VS. UNDERGROUND
+  // =========================================================================
+
+  // 1. Above-Ground / Surface Nodes: Sky-Blue Circular Satellite Beacon (RL 0.0m)
+  const surfaceNormalIcon = L.divIcon({
+    className: 'custom-sensor-pin-surface',
+    html: `<div style="position:relative;display:flex;align-items:center;justify-content:center;width:20px;height:20px;">
+             <div style="position:absolute;width:18px;height:18px;border-radius:50%;background:rgba(2,132,199,0.25);animation:pulse 3s cubic-bezier(0,0,0.2,1) infinite;"></div>
+             <div style="background:#0284c7;width:15px;height:15px;border-radius:50%;border:2.5px solid #ffffff;box-shadow:0 2px 8px rgba(2,132,199,0.75);display:flex;align-items:center;justify-content:center;z-index:2;">
+               <div style="width:4px;height:4px;background:#ffffff;border-radius:50%;"></div>
+             </div>
+           </div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
   });
 
-  const anomalySensorIcon = L.divIcon({
-    className: 'custom-sensor-pin-anomaly',
-    html: `<div style="position:relative;display:flex;align-items:center;justify-content:center;">
-             <div style="position:absolute;width:24px;height:24px;border-radius:50%;background:rgba(239,68,68,0.6);animation:ping 1s cubic-bezier(0,0,0.2,1) infinite;"></div>
-             <div style="background:#ef4444;width:14px;height:14px;border-radius:50%;border:2px solid #ffffff;box-shadow:0 0 12px rgba(239,68,68,0.95);z-index:2;"></div>
+  const surfaceAnomalyIcon = L.divIcon({
+    className: 'custom-sensor-pin-surface-anomaly',
+    html: `<div style="position:relative;display:flex;align-items:center;justify-content:center;width:26px;height:26px;">
+             <div style="position:absolute;width:26px;height:26px;border-radius:50%;background:rgba(239,68,68,0.55);animation:ping 1.2s cubic-bezier(0,0,0.2,1) infinite;"></div>
+             <div style="background:#ef4444;width:16px;height:16px;border-radius:50%;border:2.5px solid #ffffff;box-shadow:0 0 14px rgba(239,68,68,0.95);display:flex;align-items:center;justify-content:center;z-index:2;">
+               <div style="width:4px;height:4px;background:#ffffff;border-radius:50%;"></div>
+             </div>
            </div>`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+  });
+
+  // 2. Subterranean / Underground Nodes: Deep Amber/Orange Diamond Mining Box (RL -248m)
+  const undergroundNormalIcon = L.divIcon({
+    className: 'custom-sensor-pin-underground',
+    html: `<div style="position:relative;display:flex;align-items:center;justify-content:center;width:20px;height:20px;">
+             <div style="background:#ea580c;width:13px;height:13px;transform:rotate(45deg);border-radius:2px;border:2.5px solid #ffffff;box-shadow:0 2px 8px rgba(234,88,12,0.8);display:flex;align-items:center;justify-content:center;z-index:2;">
+               <div style="width:3.5px;height:3.5px;background:#ffffff;border-radius:1px;"></div>
+             </div>
+           </div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+
+  const undergroundAnomalyIcon = L.divIcon({
+    className: 'custom-sensor-pin-underground-anomaly',
+    html: `<div style="position:relative;display:flex;align-items:center;justify-content:center;width:26px;height:26px;">
+             <div style="position:absolute;width:22px;height:22px;transform:rotate(45deg);border-radius:2px;background:rgba(220,38,38,0.6);animation:ping 1.2s cubic-bezier(0,0,0.2,1) infinite;"></div>
+             <div style="background:#dc2626;width:14px;height:14px;transform:rotate(45deg);border-radius:2px;border:2.5px solid #ffffff;box-shadow:0 0 16px rgba(220,38,38,0.95);display:flex;align-items:center;justify-content:center;z-index:2;">
+               <div style="width:3.5px;height:3.5px;background:#ffffff;border-radius:1px;"></div>
+             </div>
+           </div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
   });
 
   // Dynamic deformation rates
@@ -362,7 +421,46 @@ export default function LeafletMapInner({ selectedZone, showHeatmap = true }: Le
         </div>
       )}
 
-      {/* Floating InSAR Subsidence Heatmap Legend HUD */}
+      {/* Floating In-Map Stratum Quick Filter Pills (Top Right) */}
+      <div className="absolute top-3 right-3 z-[1000] flex items-center gap-1 p-1 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 shadow-xl pointer-events-auto text-xs font-semibold">
+        <button
+          onClick={() => setNodeVariantFilter?.('all')}
+          className={`px-2.5 py-1 rounded-xl transition-all ${
+            nodeVariantFilter === 'all'
+              ? 'bg-slate-800 dark:bg-slate-700 text-white shadow-xs font-bold'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+          title="Display all nodes together"
+        >
+          All ({computedSensors.length})
+        </button>
+        <button
+          onClick={() => setNodeVariantFilter?.('surface')}
+          className={`px-2.5 py-1 rounded-xl transition-all flex items-center gap-1.5 ${
+            nodeVariantFilter === 'surface'
+              ? 'bg-sky-600 text-white shadow-xs font-bold'
+              : 'text-sky-700 dark:text-sky-400 hover:bg-sky-500/10'
+          }`}
+          title="Filter to Surface Nodes only (RL 0.0m)"
+        >
+          <span className="w-2.5 h-2.5 rounded-full bg-sky-400 border border-white" />
+          <span>Surface ({surfaceCount})</span>
+        </button>
+        <button
+          onClick={() => setNodeVariantFilter?.('underground')}
+          className={`px-2.5 py-1 rounded-xl transition-all flex items-center gap-1.5 ${
+            nodeVariantFilter === 'underground'
+              ? 'bg-[#e64a19] text-white shadow-xs font-bold'
+              : 'text-orange-700 dark:text-orange-400 hover:bg-orange-500/10'
+          }`}
+          title="Filter to Underground Strata Nodes only (RL -248m)"
+        >
+          <span className="w-2.5 h-2.5 rotate-45 rounded-xs bg-amber-400 border border-white" />
+          <span>Underground ({undergroundCount})</span>
+        </button>
+      </div>
+
+      {/* Floating InSAR Subsidence Heatmap & Stratum Legend HUD */}
       {showHeatmap && (
         <div className="absolute bottom-4 left-4 z-[1000] p-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-xl text-xs font-mono pointer-events-auto max-w-xs select-none">
           <div className="flex items-center justify-between gap-2 pb-1.5 mb-1.5 border-b border-slate-200 dark:border-slate-800">
@@ -371,6 +469,27 @@ export default function LeafletMapInner({ selectedZone, showHeatmap = true }: Le
               Node-Driven Heatmap
             </span>
             <span className="text-[9px] text-slate-400 font-sans">KDE Spatial Field</span>
+          </div>
+
+          {/* Node Variant Representation Guide */}
+          <div className="mb-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5">
+            <span className="text-[9px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider block">
+              Node Variants ({visibleSensors.length}/{computedSensors.length} visible):
+            </span>
+            <div className="flex items-center justify-between text-[10px]">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-sky-500 border border-white ring-1 ring-sky-300/40" />
+                <span className="text-sky-700 dark:text-sky-300 font-bold">Surface Nodes</span>
+              </div>
+              <span className="text-slate-500 font-mono text-[9px]">{surfaceCount} nodes (RL 0m)</span>
+            </div>
+            <div className="flex items-center justify-between text-[10px]">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rotate-45 rounded-xs bg-amber-500 border border-white ring-1 ring-amber-300/40" />
+                <span className="text-amber-700 dark:text-amber-400 font-bold">Underground Nodes</span>
+              </div>
+              <span className="text-slate-500 font-mono text-[9px]">{undergroundCount} nodes (-248m)</span>
+            </div>
           </div>
 
           {/* Continuous Multi-Chromatic Gradient Bar */}
@@ -442,7 +561,7 @@ export default function LeafletMapInner({ selectedZone, showHeatmap = true }: Le
         scrollWheelZoom={false}
         style={{ height: '100%', width: '100%' }}
       >
-        <ChangeMapView coords={position} />
+        <ChangeMapView lat={selectedZone.lat} lng={selectedZone.lng} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -450,7 +569,7 @@ export default function LeafletMapInner({ selectedZone, showHeatmap = true }: Le
 
         {/* PURELY DYNAMIC NODE-DRIVEN HEATMAP LAYER (Underneath Markers) */}
         {showHeatmap && (
-          <DynamicNodeHeatmapOverlay computedSensors={computedSensors} />
+          <DynamicNodeHeatmapOverlay computedSensors={visibleSensors} />
         )}
 
         {/* Mine Center Marker */}
@@ -479,41 +598,70 @@ export default function LeafletMapInner({ selectedZone, showHeatmap = true }: Le
           </Popup>
         </Marker>
 
-        {/* DYNAMIC SENSOR NODES (THE CAUSE) */}
-        {computedSensors.map((item) => {
+        {/* DYNAMIC SENSOR NODES (THE CAUSE) - FILTERED BY STRATUM VARIANT */}
+        {visibleSensors.map((item) => {
           const { sensor, position: sensorPos, isAnomaly, liveReading } = item;
+          const isSurface = sensor.domain === 'surface';
+
+          // Assign distinct iconography: Circle for Surface, Diamond for Underground
+          const nodeIcon = isSurface
+            ? (isAnomaly ? surfaceAnomalyIcon : surfaceNormalIcon)
+            : (isAnomaly ? undergroundAnomalyIcon : undergroundNormalIcon);
 
           return (
             <Marker
               key={sensor.id}
               position={sensorPos}
-              icon={isAnomaly ? anomalySensorIcon : normalSensorIcon}
+              icon={nodeIcon}
             >
               <Popup>
-                <div className="p-1.5 text-xs font-sans max-w-[230px]">
-                  <div className="flex items-center justify-between mb-1 gap-1">
-                    <strong className="text-gray-900 block text-xs truncate" title={sensor.name}>
-                      {sensor.name}
-                    </strong>
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase shrink-0 ${
-                      isAnomaly ? 'bg-red-100 text-red-700 font-mono' : 'bg-blue-100 text-blue-700'
+                <div className="p-1 text-xs font-sans max-w-[245px]">
+                  {/* Domain Category Banner */}
+                  <div className={`flex items-center justify-between px-2 py-1 rounded-lg mb-1.5 border ${
+                    isSurface
+                      ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300'
+                      : 'bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
+                  }`}>
+                    <div className="flex items-center gap-1.5">
+                      {isSurface ? (
+                        <span className="w-2.5 h-2.5 rounded-full bg-sky-500 ring-2 ring-sky-300/50" />
+                      ) : (
+                        <span className="w-2.5 h-2.5 rotate-45 rounded-xs bg-amber-500 ring-2 ring-amber-300/50" />
+                      )}
+                      <span className="text-[10px] font-black uppercase tracking-wider">
+                        {isSurface ? 'Surface Datum (RL 0.0m)' : 'Subterranean Seam XII (-248m)'}
+                      </span>
+                    </div>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono uppercase ${
+                      isAnomaly
+                        ? 'bg-red-500 text-white'
+                        : isSurface
+                        ? 'bg-sky-600 text-white'
+                        : 'bg-amber-600 text-white'
                     }`}>
-                      {isAnomaly ? 'ANOMALY (HEAT EMITTER)' : 'NOMINAL (CLEAR)'}
+                      {isAnomaly ? 'ANOMALY' : 'NOMINAL'}
                     </span>
                   </div>
-                  <div className="text-[10px] text-gray-500 font-mono flex items-center justify-between">
+
+                  <strong className="text-gray-900 block text-xs truncate" title={sensor.name}>
+                    {sensor.name}
+                  </strong>
+                  <div className="text-[10px] text-gray-500 font-mono flex items-center justify-between mt-0.5">
                     <span>{sensor.id}</span>
-                    <span className="capitalize font-semibold">{sensor.domain}</span>
+                    <span className="capitalize font-semibold">{sensor.type.replace('_', ' ')}</span>
                   </div>
                   <p className="text-[11px] text-gray-600 mt-1 font-medium leading-tight">
                     {sensor.hardwareModel}
                   </p>
                   <p className="text-[10px] text-gray-500 mt-0.5">
-                    Depth: {sensor.depthMeters === 0 ? 'Surface (0m)' : `${sensor.depthMeters}m RL`} • {sensor.location}
+                    Location: {sensor.location}
                   </p>
+
                   <div className="mt-1.5 pt-1.5 border-t border-gray-200 flex items-center justify-between">
                     <span className="text-[10px] text-gray-500">Live Reading:</span>
-                    <span className={`font-bold text-xs font-mono ${isAnomaly ? 'text-red-600 animate-pulse' : 'text-blue-600'}`}>
+                    <span className={`font-bold text-xs font-mono ${
+                      isAnomaly ? 'text-red-600 animate-pulse' : isSurface ? 'text-sky-600' : 'text-amber-600'
+                    }`}>
                       {liveReading.toFixed(2)} {sensor.unit}
                     </span>
                   </div>

@@ -11,7 +11,7 @@ const LeafletMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[480px] w-full rounded-2xl bg-gray-100 dark:bg-slate-900 flex items-center justify-center text-xs text-gray-400">
+      <div className="h-[540px] lg:h-[600px] xl:h-[640px] w-full rounded-2xl bg-gray-100 dark:bg-slate-900 flex items-center justify-center text-xs text-gray-400">
         Loading Coalfield Satellite Map...
       </div>
     )
@@ -19,18 +19,31 @@ const LeafletMap = dynamic(
 );
 
 export function CoalfieldMap() {
-  const {
-    selectedCoalfield,
-    setSelectedCoalfield,
-    isSubsidenceSimActive,
-    simProgress,
-    triggerSubsidenceEvent,
-    resetSimulation,
-  } = useDashboardStore();
+  const selectedCoalfield = useDashboardStore((s) => s.selectedCoalfield);
+  const setSelectedCoalfield = useDashboardStore((s) => s.setSelectedCoalfield);
+  const isSubsidenceSimActive = useDashboardStore((s) => s.isSubsidenceSimActive);
+  const simProgress = useDashboardStore((s) => s.simProgress);
+  const triggerSubsidenceEvent = useDashboardStore((s) => s.triggerSubsidenceEvent);
+  const resetSimulation = useDashboardStore((s) => s.resetSimulation);
 
+  const [localCoalfieldId, setLocalCoalfieldId] = useState<string>(selectedCoalfield);
   const [showHeatmap, setShowHeatmap] = useState(true);
+  const [nodeVariantFilter, setNodeVariantFilter] = useState<'all' | 'surface' | 'underground'>('all');
 
-  const currentZone = COALFIELD_ZONES.find(z => z.id === selectedCoalfield) || COALFIELD_ZONES[0];
+  // Keep local state synchronized with store if changed from Sidebar or external drill trigger
+  React.useEffect(() => {
+    if (selectedCoalfield && selectedCoalfield !== localCoalfieldId) {
+      setLocalCoalfieldId(selectedCoalfield);
+    }
+  }, [selectedCoalfield, localCoalfieldId]);
+
+  const handleSelectCoalfield = (id: string) => {
+    setLocalCoalfieldId(id);
+    setSelectedCoalfield(id);
+  };
+
+  const activeId = localCoalfieldId || selectedCoalfield;
+  const currentZone = COALFIELD_ZONES.find(z => z.id === activeId) || COALFIELD_ZONES[0];
   const isJhariaSelected = currentZone.id === 'jharia-block-4';
   const isDrillOnCurrent = isSubsidenceSimActive && isJhariaSelected;
 
@@ -70,16 +83,55 @@ export function CoalfieldMap() {
 
         {/* Controls: Coalfield Selector & Simulation Drill Button */}
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Stratum Variant Filter (Surface vs. Underground Distinction) */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-slate-900 border border-gray-200/80 dark:border-slate-800 text-xs">
+            <button
+              onClick={() => setNodeVariantFilter('all')}
+              className={`px-2.5 py-1.5 rounded-lg font-bold transition-all ${
+                nodeVariantFilter === 'all'
+                  ? 'bg-slate-800 dark:bg-slate-700 text-white shadow-xs'
+                  : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+              title="Show All Nodes (Surface + Underground)"
+            >
+              All Variants
+            </button>
+            <button
+              onClick={() => setNodeVariantFilter('surface')}
+              className={`px-2.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
+                nodeVariantFilter === 'surface'
+                  ? 'bg-sky-600 text-white shadow-xs'
+                  : 'text-sky-700 dark:text-sky-400 hover:bg-sky-500/10'
+              }`}
+              title="Show Only Above-Ground Surface Nodes (RL 0.0m)"
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-400 border border-white" />
+              <span>Surface</span>
+            </button>
+            <button
+              onClick={() => setNodeVariantFilter('underground')}
+              className={`px-2.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
+                nodeVariantFilter === 'underground'
+                  ? 'bg-[#e64a19] text-white shadow-xs'
+                  : 'text-orange-700 dark:text-orange-400 hover:bg-orange-500/10'
+              }`}
+              title="Show Only Subterranean Strata Nodes (RL -248m)"
+            >
+              <span className="w-2.5 h-2.5 rotate-45 rounded-xs bg-amber-400 border border-white" />
+              <span>Underground</span>
+            </button>
+          </div>
+
           {/* Mine Switcher Buttons */}
           <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gray-100 dark:bg-slate-900 border border-gray-200/80 dark:border-slate-800">
             {COALFIELD_ZONES.map(z => {
-              const isSelected = selectedCoalfield === z.id;
+              const isSelected = activeId === z.id;
               const isJharia = z.id === 'jharia-block-4';
 
               return (
                 <button
                   key={z.id}
-                  onClick={() => setSelectedCoalfield(z.id)}
+                  onClick={() => handleSelectCoalfield(z.id)}
                   title={`${z.name} (${z.state})`}
                   className={`relative px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                     isSelected
@@ -139,8 +191,14 @@ export function CoalfieldMap() {
       </div>
 
       {/* Map Container */}
-      <div className="h-[480px] w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-800 shadow-soft relative bg-slate-950">
-        <LeafletMap selectedZone={currentZone} showHeatmap={showHeatmap} />
+      <div className="h-[540px] lg:h-[600px] xl:h-[640px] w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-800 shadow-soft relative bg-slate-950">
+        <LeafletMap
+          key={currentZone.id}
+          selectedZone={currentZone}
+          showHeatmap={showHeatmap}
+          nodeVariantFilter={nodeVariantFilter}
+          setNodeVariantFilter={setNodeVariantFilter}
+        />
       </div>
 
       {/* Satellite InSAR & Geotechnical Status Banner */}
@@ -166,9 +224,8 @@ export function CoalfieldMap() {
         </div>
 
         <div className="flex items-center justify-between sm:justify-end gap-3 text-gray-500 dark:text-slate-400 font-mono text-[11px]">
-          <span>Coords: {currentZone.lat.toFixed(4)}°N, {currentZone.lng.toFixed(4)}°E</span>
-          <span className="px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-800 font-bold text-gray-700 dark:text-gray-300">
-            {currentZone.activeNodes} IoT Nodes
+          <span className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-slate-800 font-bold text-gray-700 dark:text-gray-300">
+            {currentZone.activeNodes} Active IoT Nodes
           </span>
         </div>
       </div>

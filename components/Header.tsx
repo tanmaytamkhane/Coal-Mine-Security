@@ -1,48 +1,61 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
-  Search,
+  Building2,
+  Home,
+  Activity,
+  Box,
+  MapPin,
+  LineChart,
+  BellRing,
+  ShieldCheck,
   Moon,
   Sun,
-  Volume2,
-  VolumeX,
   Play,
   RotateCcw,
   Download,
-  Box,
-  PanelLeftClose,
-  PanelLeftOpen,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useDashboardStore } from '../lib/store';
 import { COALFIELD_ZONES } from '../lib/constants';
 
 export function Header() {
+  const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const {
     isDarkMode,
     toggleDarkMode,
-    isAudioMuted,
-    toggleAudioMute,
     isSubsidenceSimActive,
     simProgress,
     triggerSubsidenceEvent,
     resetSimulation,
     selectedCoalfield,
-    isMlModelConnected,
-    mlModelEngine,
-    isSidebarOpen,
-    toggleSidebar,
+    alerts,
   } = useDashboardStore();
 
-  const currentZone = COALFIELD_ZONES.find(z => z.id === selectedCoalfield) || COALFIELD_ZONES[0];
+  const currentZone = COALFIELD_ZONES.find((z) => z.id === selectedCoalfield) || COALFIELD_ZONES[0];
+  const unreadAlerts = alerts.filter((a) => !a.acknowledged && a.severity !== 'info').length;
+
+  const navLinks = [
+    { label: 'Home', href: '/', icon: Home },
+    { label: 'Console', href: '/dashboard', icon: Activity },
+    { label: '3D Model', href: '/model', icon: Box },
+    { label: 'GIS Map', href: '/map', icon: MapPin },
+    { label: 'Trends', href: '/trends', icon: LineChart },
+    { label: 'Alerts', href: '/alerts', icon: BellRing, badge: unreadAlerts > 0 ? unreadAlerts : undefined },
+    { label: 'Regulations', href: '/about', icon: ShieldCheck },
+  ];
 
   const handleExportReport = () => {
     const reportText = `DGMS MINE SUBSIDENCE MONITORING COMPLIANCE REPORT
 Problem Statement: SIH26025
 Location: ${currentZone.name} (${currentZone.state})
 Timestamp: ${new Date().toISOString()}
-AI Model Engine: ${mlModelEngine}
 Telemetry Status: 100% Mesh Operational (Zigbee/LoRa)
 Sentinel-1 InSAR Deformation Rate: ${currentZone.insarDeformationRateMmYr} mm/yr
 Compliance Form: DGMS (Technical) Form IV
@@ -58,118 +71,145 @@ Verified by: Insp. R. K. Verma, Safety Officer`;
   };
 
   return (
-    <header className="h-14 bg-white dark:bg-[#0f141f] border-b border-slate-200 dark:border-slate-800 px-5 flex items-center justify-between transition-colors duration-150 sticky top-0 z-30">
-      {/* Left: Navbar Toggle & Search input */}
-      <div className="flex items-center gap-3 flex-1 max-w-lg">
-        {/* Horizontal Navbar Slide Toggle */}
-        <button
-          onClick={toggleSidebar}
-          className={`p-2 rounded-xl border transition-all flex items-center gap-1.5 shadow-xs shrink-0 ${
-            isSidebarOpen
-              ? 'border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-              : 'border-[#e64a19]/40 bg-orange-500/10 text-[#e64a19] dark:text-orange-400 hover:bg-orange-500/20'
-          }`}
-          title={isSidebarOpen ? 'Close Navigation Bar (Slide Left)' : 'Open Navigation Bar (Slide Right)'}
-          aria-label={isSidebarOpen ? 'Close Navigation Bar' : 'Open Navigation Bar'}
-        >
-          {isSidebarOpen ? (
-            <PanelLeftClose className="w-4 h-4" />
-          ) : (
-            <>
-              <PanelLeftOpen className="w-4 h-4" />
-              <span className="text-xs font-bold font-sans">Open Navbar</span>
-            </>
-          )}
-        </button>
+    <header className="bg-[#0c1322]/95 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-30 transition-colors">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="h-16 flex items-center justify-between gap-3">
+          {/* Brand Identity */}
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-[#182338] border border-slate-700 flex items-center justify-center text-amber-400 shrink-0 shadow-xs group-hover:border-amber-400/50 transition-colors">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div className="overflow-hidden">
+              <div className="font-black text-white text-sm tracking-tight flex items-center gap-1.5">
+                <span>DGMS • NMS-SEWS</span>
+              </div>
+              <p className="text-[10px] text-slate-400 font-mono truncate">
+                Ministry of Coal | SIH26025
+              </p>
+            </div>
+          </Link>
 
-        <div className="relative w-full">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search sensor node ID, pillar tag, or CMR regulation..."
-            className="w-full pl-8 pr-10 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-[#151c2c] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-safety-500 font-sans"
-          />
-          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded font-mono">
-            /
-          </kbd>
+          {/* Horizontal Navigation Links (Desktop: >= 1024px) */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {navLinks.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 relative ${
+                    isActive
+                      ? 'bg-[#e64a19] text-white shadow-sm'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                  <span>{item.label}</span>
+                  {item.badge !== undefined && (
+                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                      isActive ? 'bg-white text-[#e64a19]' : 'bg-red-600 text-white animate-pulse'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right Action Controls */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Subsidence Emergency Drill Button */}
+            {isSubsidenceSimActive ? (
+              <button
+                onClick={resetSimulation}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-md animate-pulse border border-red-500"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Reset Drill</span>
+                <span>({Math.round(simProgress * 100)}%)</span>
+              </button>
+            ) : (
+              <button
+                onClick={triggerSubsidenceEvent}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#e64a19] hover:bg-[#d84315] text-white text-xs font-bold transition-all shadow-md border border-orange-500"
+                title="Execute DGMS CMR-111 Strata Dilation Drill"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span className="hidden sm:inline">Simulate Drill</span>
+              </button>
+            )}
+
+            {/* Dark Mode Switch */}
+            <button
+              onClick={toggleDarkMode}
+              title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
+              className="p-2 rounded-xl border border-slate-700/80 bg-slate-800/60 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors shadow-xs"
+            >
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-300" />}
+            </button>
+
+            {/* Export DGMS Form IV Report */}
+            <button
+              onClick={handleExportReport}
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-700/80 bg-slate-800/60 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors shadow-xs"
+              title="Download DGMS Technical Form-IV Audit Log"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-400" />
+              <span>Form-IV</span>
+            </button>
+
+            {/* Mobile / Tablet Hamburger Toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-xl border border-slate-700/80 text-slate-300 hover:bg-slate-800 transition-colors shadow-xs"
+              title="Toggle Navigation Menu"
+            >
+              {mobileMenuOpen ? <X className="w-4 h-4 text-[#e64a19]" /> : <Menu className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Right controls */}
-      <div className="flex items-center gap-2">
-        {/* Official ML Engine Status */}
-        <div
-          title={isMlModelConnected ? 'Live Connection: XGBoost 3.2.0 (FastAPI port 8000)' : 'DGMS Calibrated Geotechnical Rule Engine'}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs border ${
-            isMlModelConnected
-              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
-              : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
-          }`}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${isMlModelConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-          <span className="font-mono text-[11px] font-semibold">
-            {isMlModelConnected ? 'DGMS-AI: ACTIVE (XGBoost)' : 'DGMS-AI: SCAMP SIM'}
-          </span>
+      {/* Mobile Menu Dropdown Panel */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-t border-slate-800 bg-[#0c1322] px-4 py-3 space-y-1 shadow-xl">
+          {navLinks.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  isActive
+                    ? 'bg-[#e64a19] text-white shadow-sm'
+                    : 'text-slate-200 hover:bg-slate-800'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                  <span>{item.label}</span>
+                </div>
+                {item.badge !== undefined && (
+                  <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${
+                    isActive ? 'bg-white text-[#e64a19]' : 'bg-red-600 text-white'
+                  }`}>
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+
+          <div className="pt-2 mt-2 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+            <span>Insp. R. K. Verma (DGMS Safety Officer)</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          </div>
         </div>
-
-        {/* 3D Mine Model Shortcut */}
-        <Link
-          href="/model"
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors"
-          title="Access 3D Geotechnical Bord & Pillar Spatial Model"
-        >
-          <Box className="w-3.5 h-3.5 text-safety-600 dark:text-safety-400" />
-          <span>3D Seam Model</span>
-        </Link>
-
-        {/* Audio Siren Toggle */}
-        <button
-          onClick={toggleAudioMute}
-          title={isAudioMuted ? 'Unmute Form-IV Acoustic Siren' : 'Mute Form-IV Acoustic Siren'}
-          className="p-1.5 rounded border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-        >
-          {isAudioMuted ? <VolumeX className="w-3.5 h-3.5 text-red-500" /> : <Volume2 className="w-3.5 h-3.5" />}
-        </button>
-
-        {/* Dark Mode Switch */}
-        <button
-          onClick={toggleDarkMode}
-          title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
-          className="p-1.5 rounded border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-        >
-          {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-slate-600" />}
-        </button>
-
-        {/* Subsidence Emergency Drill Button */}
-        {isSubsidenceSimActive ? (
-          <button
-            onClick={resetSimulation}
-            className="flex items-center gap-1.5 px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors shadow-sm"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset Drill ({Math.round(simProgress * 100)}%)</span>
-          </button>
-        ) : (
-          <button
-            onClick={triggerSubsidenceEvent}
-            className="flex items-center gap-1.5 px-3 py-1 rounded bg-[#e64a19] hover:bg-[#d84315] text-white text-xs font-bold transition-colors shadow-sm"
-            title="Execute DGMS CMR-111 Strata Dilation Drill"
-          >
-            <Play className="w-3 h-3 fill-current" />
-            <span>Simulate Drill</span>
-          </button>
-        )}
-
-        {/* Export DGMS Form IV Report */}
-        <button
-          onClick={handleExportReport}
-          className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium transition-colors"
-          title="Download DGMS Technical Form-IV Audit Log"
-        >
-          <Download className="w-3.5 h-3.5 text-slate-500" />
-          <span>Form-IV</span>
-        </button>
-      </div>
+      )}
     </header>
   );
 }

@@ -21,6 +21,7 @@ import {
   Moon
 } from 'lucide-react';
 import { useDashboardStore } from '../lib/store';
+import { Footer } from '../components/Footer';
 
 export default function LandingPage() {
   const { isDarkMode, toggleDarkMode, isSubsidenceSimActive, triggerSubsidenceEvent, resetSimulation } = useDashboardStore();
@@ -82,7 +83,7 @@ export default function LandingPage() {
       
       {/* ─── OFFICIAL MINISTERIAL HERO & PORTAL MASTHEAD ──────────────────────── */}
       <header className="bg-white dark:bg-[#0f141f] border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             
             {/* National Crest & Portal Titles */}
@@ -135,7 +136,7 @@ export default function LandingPage() {
 
       {/* ─── STATUTORY DIRECTIVE / NOTICE BANNER ─────────────────────────────── */}
       <div className="bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-900/60 px-4 py-2">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-900 dark:text-amber-200">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-900 dark:text-amber-200">
           <div className="flex items-center gap-2">
             <span className="font-bold font-mono uppercase px-1.5 py-0.5 rounded bg-amber-200 dark:bg-amber-900/80 text-amber-900 dark:text-amber-100 text-[10px]">
               STATUTORY CIRCULAR
@@ -153,7 +154,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {/* ─── NATIONAL KEY STATUTORY METRICS STRIP ───────────────────────────── */}
         <section className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
@@ -537,61 +538,7 @@ export default function LandingPage() {
       </main>
 
       {/* ─── OFFICIAL GOVERNMENT PORTAL FOOTER ───────────────────────────────── */}
-      <footer className="mt-12 bg-white dark:bg-[#070b12] border-t border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-slate-200 dark:border-slate-800/80">
-            
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-sm">
-                <Building2 className="w-4 h-4 text-amber-500" />
-                <span>DGMS • NMS-SEWS</span>
-              </div>
-              <p className="text-[11px] leading-relaxed text-slate-500">
-                Directorate General of Mines Safety<br />
-                Headquarters: Dhanbad, Jharkhand — 826001<br />
-                Ministry of Coal, Government of India
-              </p>
-            </div>
-
-            <div>
-              <p className="font-bold text-slate-900 dark:text-slate-200 mb-2 uppercase text-[11px] font-mono">Operational Portals</p>
-              <ul className="space-y-1.5 text-[11px]">
-                <li><Link href="/dashboard" className="hover:text-[#e64a19] transition-colors">Subterranean Telemetry Console</Link></li>
-                <li><Link href="/model" className="hover:text-[#e64a19] transition-colors">3D Bord & Pillar Seam Model</Link></li>
-                <li><Link href="/map" className="hover:text-[#e64a19] transition-colors">National Coalfield Satellite GIS</Link></li>
-                <li><Link href="/trends" className="hover:text-[#e64a19] transition-colors">Strata Telemetry Trends & Analytics</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <p className="font-bold text-slate-900 dark:text-slate-200 mb-2 uppercase text-[11px] font-mono">Statutory Acts & Norms</p>
-              <ul className="space-y-1.5 text-[11px]">
-                <li><Link href="/about" className="hover:text-[#e64a19] transition-colors">Coal Mines Regulations (CMR) 2017</Link></li>
-                <li><Link href="/alerts" className="hover:text-[#e64a19] transition-colors">DGMS Technical Form-IV Protocol</Link></li>
-                <li><span className="text-slate-400">Mines Act, 1952 (Section 22A)</span></li>
-                <li><span className="text-slate-400">CMPDI Strata Telemetry Guidelines</span></li>
-              </ul>
-            </div>
-
-            <div>
-              <p className="font-bold text-slate-900 dark:text-slate-200 mb-2 uppercase text-[11px] font-mono">System Audit Information</p>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-mono">
-                Portal Release: v2.4.1 (SIH26025)<br />
-                Edge Gateway: 127.0.0.1:8000<br />
-                Model Engine: XGBoost 3.2.0<br />
-                National Server: NIC-DGMS-04<br />
-                Status: OPERATIONAL (CMR-111)
-              </p>
-            </div>
-
-          </div>
-
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500 font-mono">
-            <p>© 2026 Directorate General of Mines Safety (DGMS), Ministry of Coal, Govt. of India. All rights reserved.</p>
-            <p>Smart India Hackathon 2026 • Problem Statement SIH26025</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
     </div>
   );

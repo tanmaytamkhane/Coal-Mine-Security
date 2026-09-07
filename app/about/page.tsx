@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import {
@@ -12,7 +12,7 @@ import {
 
 export default function AboutPage() {
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-[1600px] w-full">
       {/* Title */}
       <div>
         <div className="flex items-center gap-2">
@@ -21,16 +21,16 @@ export default function AboutPage() {
           </span>
           <span className="text-xs text-gray-500">DGMS & CMPDI Framework</span>
         </div>
-        <h1 className="text-3xl font-black text-gray-900 dark:text-white mt-2 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mt-2 tracking-tight">
           Underground Coal Mine Subsidence Monitoring System
         </h1>
-        <p className="text-sm text-gray-600 dark:text-slate-400 mt-1 max-w-3xl">
+        <p className="text-sm text-gray-600 dark:text-slate-400 mt-1 max-w-4xl">
           An AI-driven continuous early-warning system developed for Smart India Hackathon (SIH26025), fusing underground IoT sensor arrays with surface satellite InSAR radar and geotechnical physics models to predict mine roof collapse and strata subsidence.
         </p>
       </div>
 
       {/* 4 Pillars of Architecture */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Card 1: Sensor Array */}
         <div className="bg-white dark:bg-[#111726] rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-soft">
           <div className="flex items-center gap-3 mb-3">

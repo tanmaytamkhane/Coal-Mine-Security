@@ -22,12 +22,13 @@ interface DashboardState {
   mlModelEngine: string;
   mlFeatureContributions: Record<string, string>;
 
-  // Sidebar Navigation Drawer State
-  isSidebarOpen: boolean;
+  // Dynamic Drill Anomaly Randomization State
+  simAnomalousPillarIds: string[];
+  simAnomalousSurfaceNodeIds: string[];
+  simAnomalousMapSensorIds: string[];
+  simSagCenter: { x: number; z: number };
 
   // Actions
-  toggleSidebar: () => void;
-  setSidebarOpen: (open: boolean) => void;
   toggleDarkMode: () => void;
   setSelectedCoalfield: (id: string) => void;
   triggerSubsidenceEvent: () => void;
@@ -82,6 +83,67 @@ const generateInitialTelemetry = (): TelemetryPoint[] => {
   return points;
 };
 
+export function generateRandomDrillAnomalies() {
+  // 1. Pick a random anchor pillar in the 4x4 grid (row 0-3, col 0-3)
+  const anchorRow = Math.floor(Math.random() * 4);
+  const anchorCol = Math.floor(Math.random() * 4);
+  const targetCount = 3 + Math.floor(Math.random() * 3); // Randomly 3, 4, or 5 pillars
+
+  const spacing = 6.4;
+  const offset = 9.6;
+
+  // Calculate distance from anchor for each of the 16 pillars with subtle jitter
+  const pillarDistances = INITIAL_PILLARS.map((p) => {
+    const [r, c] = p.gridPos;
+    const dist = Math.hypot(r - anchorRow, c - anchorCol) + (Math.random() - 0.5) * 0.5;
+    const x = c * spacing - offset;
+    const z = r * spacing - offset;
+    return { id: p.id, r, c, x, z, dist };
+  });
+
+  pillarDistances.sort((a, b) => a.dist - b.dist);
+  const selectedPillars = pillarDistances.slice(0, targetCount);
+  const simAnomalousPillarIds = selectedPillars.map((p) => p.id);
+
+  // Centroid of failing underground pillars in 3D world coordinates
+  const meanX = selectedPillars.reduce((acc, p) => acc + p.x, 0) / selectedPillars.length;
+  const meanZ = selectedPillars.reduce((acc, p) => acc + p.z, 0) / selectedPillars.length;
+  const simSagCenter = {
+    x: Math.round(meanX * 100) / 100,
+    z: Math.round(meanZ * 100) / 100,
+  };
+
+  // 2. Select 4 to 6 surface nodes closest to this ground subsidence centroid
+  const surfGrid = [-10.5, -3.5, 3.5, 10.5];
+  const surfaceNodes: { id: string; x: number; z: number; dist: number }[] = [];
+  let sIdx = 1;
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 4; c++) {
+      const sx = surfGrid[c];
+      const sz = surfGrid[r];
+      const id = `SN-SF-${sIdx.toString().padStart(2, '0')}`;
+      sIdx++;
+      const dist = Math.hypot(sx - meanX, sz - meanZ) + (Math.random() - 0.5) * 1.5;
+      surfaceNodes.push({ id, x: sx, z: sz, dist });
+    }
+  }
+  surfaceNodes.sort((a, b) => a.dist - b.dist);
+  const surfaceTargetCount = 4 + Math.floor(Math.random() * 3); // 4 to 6 surface nodes
+  const simAnomalousSurfaceNodeIds = surfaceNodes.slice(0, surfaceTargetCount).map((s) => s.id);
+
+  // 3. Select 3 to 6 random map sensors for the 2D coalfield map
+  const candidateMapSensors = INITIAL_SENSOR_NODES.map((s) => s.id);
+  const shuffledSensors = [...candidateMapSensors].sort(() => Math.random() - 0.5);
+  const simAnomalousMapSensorIds = shuffledSensors.slice(0, 3 + Math.floor(Math.random() * 3));
+
+  return {
+    simAnomalousPillarIds,
+    simAnomalousSurfaceNodeIds,
+    simAnomalousMapSensorIds,
+    simSagCenter,
+  };
+}
+
 export const useDashboardStore = create<DashboardState>((set, get) => ({
   isDarkMode: false,
   selectedCoalfield: COALFIELD_ZONES[0].id,
@@ -106,9 +168,11 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     'Seismic Vibration RMS': '5.5%',
   },
 
-  isSidebarOpen: true,
-  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
-  setSidebarOpen: (open: boolean) => set({ isSidebarOpen: open }),
+  // Dynamic Drill Anomaly Randomization State (Default baseline)
+  simAnomalousPillarIds: ['P-06', 'P-10', 'P-11'],
+  simAnomalousSurfaceNodeIds: ['SN-SF-05', 'SN-SF-06', 'SN-SF-09', 'SN-SF-10'],
+  simAnomalousMapSensorIds: ['NODE-SF-POT-01', 'NODE-SF-POT-02', 'NODE-UG-BF350-01'],
+  simSagCenter: { x: -3.2, z: 0.0 },
 
   toggleDarkMode: () => set((state) => {
     const next = !state.isDarkMode;
@@ -127,10 +191,18 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   triggerSubsidenceEvent: () => {
     const currentSim = get().isSubsidenceSimActive;
     if (currentSim) return;
+
+    // Every click on Simulate Drill generates a brand new random set of failing pillars and surface nodes!
+    const randomized = generateRandomDrillAnomalies();
+
     set({
       isSubsidenceSimActive: true,
       simProgress: 0.05,
       selectedCoalfield: 'jharia-block-4', // Main focus: drill executes for Jharia
+      simAnomalousPillarIds: randomized.simAnomalousPillarIds,
+      simAnomalousSurfaceNodeIds: randomized.simAnomalousSurfaceNodeIds,
+      simAnomalousMapSensorIds: randomized.simAnomalousMapSensorIds,
+      simSagCenter: randomized.simSagCenter,
     });
   },
 
@@ -140,11 +212,14 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       simProgress: 0,
       riskScore: 24,
       riskStatus: 'normal',
-      sensors: INITIAL_SENSOR_NODES.map(s => ({ ...s, status: 'normal' })),
-      pillars: INITIAL_PILLARS.map(p => ({
+      simAnomalousPillarIds: [],
+      simAnomalousSurfaceNodeIds: [],
+      simAnomalousMapSensorIds: [],
+      sensors: INITIAL_SENSOR_NODES.map((s) => ({ ...s, status: 'normal' })),
+      pillars: INITIAL_PILLARS.map((p) => ({
         ...p,
-        status: p.factorOfSafety < 2.0 ? 'stressed' : 'stable',
-        displacementMm: p.id === 'P-06' ? 2.8 : p.id === 'P-11' ? 3.5 : 1.5,
+        status: 'stable',
+        displacementMm: 1.4,
       })),
     });
   },

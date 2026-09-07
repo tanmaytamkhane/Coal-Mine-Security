@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { GovHeaderStrip } from './GovHeaderStrip';
+import { Footer } from './Footer';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -20,20 +20,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-mine-bg dark:bg-mine-bg-dark text-gray-900 dark:text-slate-100">
       <GovHeaderStrip />
-      <div className="flex-1 flex min-h-0">
-        {/* Left Sidebar */}
-        <Sidebar />
-
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden">
-          <Header />
-          <main className="flex-1 p-5 md:p-6 max-w-7xl mx-auto w-full">
-            {children}
-          </main>
-        </div>
-      </div>
+      <Header />
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
+        {children}
+      </main>
+      <Footer />
     </div>
   );
 }

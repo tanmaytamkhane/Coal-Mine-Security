@@ -29,7 +29,7 @@ export function GovHeaderStrip() {
   }, []);
 
   return (
-    <div className="w-full bg-[#1b2537] dark:bg-[#070b12] text-slate-200 text-[11px] border-b border-slate-700/60 select-none">
+    <div className="w-full bg-[#080d19] text-slate-200 text-[11px] border-b border-slate-800/80 select-none">
       {/* Tricolor Ribbon Bar (Saffron, White, Green) */}
       <div className="h-[3px] w-full flex">
         <div className="w-1/3 bg-[#FF9933]" />
@@ -37,7 +37,7 @@ export function GovHeaderStrip() {
         <div className="w-1/3 bg-[#138808]" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex flex-wrap items-center justify-between gap-2">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex flex-wrap items-center justify-between gap-2">
         {/* Left: Official Indian Ministry Attribution */}
         <div className="flex items-center gap-3 flex-wrap font-medium">
           <span className="font-semibold text-white tracking-wide">भारत सरकार | Government of India</span>

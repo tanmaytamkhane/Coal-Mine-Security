@@ -645,7 +645,7 @@ export function Mine3DScene() {
       0.1,
       1000
     );
-    camera.position.set(24, 18, 26);
+    camera.position.set(38, 32, 40);
     cameraRef.current = camera;
 
     // 3. WebGL Renderer
@@ -680,7 +680,7 @@ export function Mine3DScene() {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.maxPolarAngle = Math.PI / 2 + 0.04;
-    controls.target.set(0, 5.0, 0); // Framed around strata mid-elevation
+    controls.target.set(0, 8.5, 0); // Framed around strata mid-elevation column
     controlsRef.current = controls;
 
     // 5. Procedural Textures
@@ -1438,10 +1438,14 @@ export function Mine3DScene() {
         if (sNodeId) {
           const sItem = surfaceNodeItems.find((s) => s.id === sNodeId);
           if (sItem) {
-            const isSim = useDashboardStore.getState().isSubsidenceSimActive;
-            const progress = useDashboardStore.getState().simProgress;
-            const dist = Math.hypot(sItem.x - (-3.2), sItem.z - 0.0);
-            const isAnomaly = isSim && progress > 0.12 && dist < (4.2 + progress * 7.5);
+            const st = useDashboardStore.getState();
+            const isSim = st.isSubsidenceSimActive;
+            const progress = st.simProgress;
+            const isAnomaly = isSim && progress > 0.08 && (
+              st.simAnomalousSurfaceNodeIds && st.simAnomalousSurfaceNodeIds.length > 0
+                ? st.simAnomalousSurfaceNodeIds.includes(sItem.id)
+                : Math.hypot(sItem.x - (-3.2), sItem.z - 0.0) < (4.2 + progress * 7.5)
+            );
             const disp = isAnomaly ? 1.25 + progress * 24.5 : 1.25 + (Math.sin(sItem.x + sItem.z) * 0.1);
             setActiveSurfaceNode({
               id: sItem.id,
@@ -1555,9 +1559,13 @@ export function Mine3DScene() {
         const ledMat = ugNode.led.material as THREE.MeshStandardMaterial;
         const haloMat = ugNode.halo.material as THREE.MeshBasicMaterial;
 
-        // Anomaly condition: During drill simulation, yielding pillars (P-06, P-10, P-11) or FoS < 1.9
+        // Anomaly condition: During drill simulation, check randomized simAnomalousPillarIds
+        const isSimAnomaly = state.simAnomalousPillarIds && state.simAnomalousPillarIds.length > 0
+          ? state.simAnomalousPillarIds.includes(pillar.id)
+          : (pillar.id === 'P-06' || pillar.id === 'P-10' || pillar.id === 'P-11');
+
         const isAnomaly = isSim
-          ? (pillar.id === 'P-06' || pillar.id === 'P-10' || pillar.id === 'P-11' || pillar.status === 'critical' || pillar.status === 'stressed' || pillar.factorOfSafety < 1.9)
+          ? (isSimAnomaly || pillar.status === 'critical' || pillar.status === 'stressed' || pillar.factorOfSafety < 1.9)
           : (pillar.status === 'critical');
 
         if (isAnomaly) {
@@ -1587,15 +1595,12 @@ export function Mine3DScene() {
         const haloMat = sNode.halo.material as THREE.MeshBasicMaterial;
 
         // Anomaly detection during drill simulation:
-        // Ground subsidence trough forms around (-3.2, 0.0) above yielding extraction zone
-        let isSurfaceAnomaly = false;
-        if (isSim && progress > 0.12) {
-          const distToEpicenter = Math.hypot(sNode.x - (-3.2), sNode.z - 0.0);
-          const anomalyRadius = 4.2 + progress * 7.5; // Expands with simulation progress
-          if (distToEpicenter < anomalyRadius) {
-            isSurfaceAnomaly = true;
-          }
-        }
+        // Dynamically check if this surface node is in the randomly selected anomaly fleet
+        const isSurfaceAnomaly = isSim && progress > 0.08 && (
+          state.simAnomalousSurfaceNodeIds && state.simAnomalousSurfaceNodeIds.length > 0
+            ? state.simAnomalousSurfaceNodeIds.includes(sNode.id)
+            : Math.hypot(sNode.x - (-3.2), sNode.z - 0.0) < (4.2 + progress * 7.5)
+        );
 
         if (isSurfaceAnomaly) {
           // Warning Red Glow with Pulsing Flare
@@ -1616,20 +1621,39 @@ export function Mine3DScene() {
         }
       });
 
-      // Realistic Dynamic Roof Sag Trough (Calculated across spacious 6.4m grid)
+      // Update InSAR deformation ring position to match randomized surface subsidence center
+      if (isSim && state.simSagCenter) {
+        insarRing.position.x = state.simSagCenter.x;
+        insarRing.position.z = state.simSagCenter.z;
+      }
+
+      // Realistic Dynamic Roof Sag Trough (Calculated around randomized failing pillars centroid)
       if (roof && isSim) {
+        const sagX = state.simSagCenter?.x ?? -3.2;
+        const sagZ = state.simSagCenter?.z ?? 0.0;
+        const targetLocalY = -sagZ;
         const posAttr = roof.geometry.attributes.position;
         for (let i = 0; i < posAttr.count; i++) {
           const vx = posAttr.getX(i);
           const vy = posAttr.getY(i);
-          // Centered around yielding pillars (P-06 and P-10 in row 1-2, col 1)
-          const dist = Math.sqrt((vx + 3.2) * (vx + 3.2) + (vy + 3.2) * (vy + 3.2));
+          const dist = Math.hypot(vx - sagX, vy - targetLocalY);
           if (dist < 9.5) {
             const sag = Math.cos((dist / 9.5) * (Math.PI / 2)) * progress * 1.5;
             posAttr.setZ(i, -sag);
           }
         }
         posAttr.needsUpdate = true;
+      } else if (roof && !isSim) {
+        // Restore flat roof when drill is inactive
+        const posAttr = roof.geometry.attributes.position;
+        let hasOffsets = false;
+        for (let i = 0; i < posAttr.count; i++) {
+          if (posAttr.getZ(i) !== 0) {
+            posAttr.setZ(i, 0);
+            hasOffsets = true;
+          }
+        }
+        if (hasOffsets) posAttr.needsUpdate = true;
       }
 
       renderer.render(scene, camera);
@@ -1661,20 +1685,24 @@ export function Mine3DScene() {
     if (!camera || !controls) return;
 
     if (mode === 'iso') {
-      camera.position.set(24, 18, 26);
-      controls.target.set(0, 5.0, 0);
+      camera.position.set(38, 32, 40);
+      controls.target.set(0, 8.5, 0);
+      controls.update();
     } else if (mode === 'walk') {
       // Standing in the wide 4.2m central haulage gallery between pillars
       camera.position.set(0, 1.7, 12.0);
       controls.target.set(0, 1.7, -12.0);
+      controls.update();
     } else if (mode === 'top') {
       // Architectural survey plan
-      camera.position.set(0, 36, 0.001);
-      controls.target.set(0, 0, 0);
+      camera.position.set(0, 52, 0.001);
+      controls.target.set(0, 8.5, 0);
+      controls.update();
     } else if (mode === 'side') {
       // Geological strata cross-section profile
-      camera.position.set(36, 9.0, 0);
-      controls.target.set(0, 9.0, 0);
+      camera.position.set(52, 8.5, 0);
+      controls.target.set(0, 8.5, 0);
+      controls.update();
     }
   };
 
@@ -1694,7 +1722,7 @@ export function Mine3DScene() {
         className={`transition-all duration-300 ${
           isFullscreen
             ? 'fixed inset-0 z-[9999] w-screen h-screen rounded-none bg-slate-950 p-0 m-0 overflow-hidden border-0 shadow-none'
-            : 'relative w-full h-[580px] lg:h-[620px] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl bg-slate-950'
+            : 'relative w-full h-[640px] lg:h-[700px] xl:h-[760px] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl bg-slate-950'
         }`}
       >
         <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
