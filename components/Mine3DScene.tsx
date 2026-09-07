@@ -281,6 +281,219 @@ function createSandstoneTexture(width = 512, height = 512): THREE.CanvasTexture 
   return texture;
 }
 
+// Procedural texture for realistic colliery rock pillars (matching authentic underground photos)
+function createSedimentaryRockTexture(width = 1024, height = 1024): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d')!;
+
+  // Base sedimentary warm stone gradient
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+  bgGrad.addColorStop(0, '#cca072');   // Top roof contact: warm sandstone
+  bgGrad.addColorStop(0.18, '#a3764c'); // Upper sedimentary layer
+  bgGrad.addColorStop(0.38, '#c2925f'); // Middle ochre band
+  bgGrad.addColorStop(0.58, '#82593b'); // Dense lower rock
+  bgGrad.addColorStop(0.78, '#ad8054'); // Tawny strata
+  bgGrad.addColorStop(1, '#66452d');   // Base footing rock
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, width, height);
+
+  // Continuous fine horizontal sedimentary bedding bands
+  for (let y = 0; y < height; y += 3) {
+    const bandHeight = Math.random() * 7 + 2;
+    const r = Math.floor(150 + Math.random() * 65);
+    const g = Math.floor(110 + Math.random() * 55);
+    const b = Math.floor(70 + Math.random() * 40);
+    const alpha = Math.random() * 0.35 + 0.15;
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    ctx.fillRect(0, y, width, bandHeight);
+  }
+
+  // Prominent geological strata seams (ochre, sandstone, carbonaceous shale)
+  const prominentBands = [
+    { y: 0.12 * height, h: 22, color: 'rgba(215, 172, 122, 0.7)' },
+    { y: 0.28 * height, h: 36, color: 'rgba(186, 137, 88, 0.65)' },
+    { y: 0.44 * height, h: 42, color: 'rgba(224, 185, 138, 0.75)' },
+    { y: 0.58 * height, h: 20, color: 'rgba(78, 52, 34, 0.65)' },
+    { y: 0.72 * height, h: 32, color: 'rgba(198, 150, 102, 0.7)' },
+    { y: 0.86 * height, h: 24, color: 'rgba(68, 44, 28, 0.6)' },
+  ];
+  prominentBands.forEach((b) => {
+    ctx.fillStyle = b.color;
+    ctx.fillRect(0, b.y, width, b.h);
+  });
+
+  // Natural rock pick marks, cleavage cracks & fissure grooves
+  ctx.strokeStyle = 'rgba(40, 24, 14, 0.55)';
+  for (let i = 0; i < 110; i++) {
+    const sx = Math.random() * width;
+    const sy = Math.random() * height;
+    ctx.lineWidth = Math.random() * 2.5 + 0.8;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + (Math.random() - 0.5) * 80, sy + (Math.random() - 0.5) * 15);
+    ctx.stroke();
+  }
+
+  // Fine chiseled rock speckling & quartz grain facets
+  for (let i = 0; i < 9000; i++) {
+    const px = Math.random() * width;
+    const py = Math.random() * height;
+    const isBright = Math.random() > 0.6;
+    const val = isBright ? Math.floor(Math.random() * 70 + 185) : Math.floor(Math.random() * 45 + 30);
+    const a = Math.random() * 0.45 + 0.1;
+    ctx.fillStyle = isBright
+      ? `rgba(${val}, ${val - 15}, ${val - 35}, ${a})`
+      : `rgba(${val}, ${val}, ${val}, ${a})`;
+    ctx.fillRect(px, py, Math.random() * 2 + 1, Math.random() * 2 + 1);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  return texture;
+}
+
+// Procedural bump map for rough chiseled rock facets and cleavage relief
+function createRockBumpMap(width = 1024, height = 1024): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.fillStyle = '#808080';
+  ctx.fillRect(0, 0, width, height);
+
+  // High-frequency tactile stone noise
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const data = imgData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const noise = (Math.random() - 0.5) * 110;
+    const v = Math.min(255, Math.max(0, 128 + noise));
+    data[i] = v;
+    data[i + 1] = v;
+    data[i + 2] = v;
+  }
+  ctx.putImageData(imgData, 0, 0);
+
+  // Horizontal bedding cleavage grooves
+  ctx.strokeStyle = '#202020';
+  for (let y = 0; y < height; y += 5) {
+    if (Math.random() > 0.35) {
+      ctx.lineWidth = Math.random() * 2 + 1;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y + (Math.random() - 0.5) * 4);
+      ctx.stroke();
+    }
+  }
+
+  // Deep fracture crevices & spall facet ledges
+  ctx.strokeStyle = '#050505';
+  ctx.lineWidth = 3.5;
+  for (let i = 0; i < 70; i++) {
+    const rx = Math.random() * width;
+    const ry = Math.random() * height;
+    ctx.beginPath();
+    ctx.moveTo(rx, ry);
+    ctx.lineTo(rx + (Math.random() - 0.5) * 90, ry + (Math.random() - 0.5) * 25);
+    ctx.stroke();
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  return texture;
+}
+
+// Procedural sculpted rock pillar geometry with curved trumpet flaring into the roof
+function createSculptedRockPillarGeometry(): THREE.BufferGeometry {
+  const height = 3.4;
+  const radialSegs = 28;
+  const heightSegs = 24;
+  const geo = new THREE.CylinderGeometry(1.0, 1.0, height, radialSegs, heightSegs, false);
+
+  const pos = geo.attributes.position;
+  const v = new THREE.Vector3();
+
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+
+    // Handle flat top cap (roof contact)
+    if (v.y >= 1.699) {
+      const topDist = Math.hypot(v.x, v.z);
+      if (topDist > 0.01) {
+        const angle = Math.atan2(v.z, v.x);
+        const cos4 = Math.pow(Math.cos(angle), 4);
+        const sin4 = Math.pow(Math.sin(angle), 4);
+        const sq = Math.pow(cos4 + sin4, -0.25);
+        const topR = topDist * 1.55 * sq;
+        pos.setXYZ(i, Math.cos(angle) * topR, 1.7, Math.sin(angle) * topR);
+      }
+      continue;
+    }
+
+    // Handle flat bottom cap (floor contact)
+    if (v.y <= -1.699) {
+      const botDist = Math.hypot(v.x, v.z);
+      if (botDist > 0.01) {
+        const angle = Math.atan2(v.z, v.x);
+        const cos4 = Math.pow(Math.cos(angle), 4);
+        const sin4 = Math.pow(Math.sin(angle), 4);
+        const sq = Math.pow(cos4 + sin4, -0.25);
+        const botR = botDist * 1.35 * sq;
+        pos.setXYZ(i, Math.cos(angle) * botR, -1.7, Math.sin(angle) * botR);
+      }
+      continue;
+    }
+
+    // Side wall profile:
+    const t = (v.y + height / 2) / height; // 0 (floor) to 1 (roof)
+    const angle = Math.atan2(v.z, v.x);
+
+    // Rounded-square extraction cross section (superellipse)
+    const cos4 = Math.pow(Math.cos(angle), 4);
+    const sin4 = Math.pow(Math.sin(angle), 4);
+    const squircle = Math.pow(cos4 + sin4, -0.25);
+    const baseRadius = 1.15 * squircle;
+
+    // Vertical curvature profile:
+    // Flared curved start at the top smoothly arching out into the ceiling rock
+    let flare = 1.0;
+    if (t > 0.55) {
+      // Top 45% curves outward in an arched trumpet into the roof
+      const s = (t - 0.55) / 0.45;
+      flare += Math.pow(s, 2.2) * 0.55; // Up to 1.55x (radius ~1.78m)
+    } else if (t < 0.25) {
+      // Bottom 25% flares slightly into the floor rubble
+      const s = (0.25 - t) / 0.25;
+      flare += Math.pow(s, 2.0) * 0.25; // Up to 1.25x (radius ~1.44m)
+    } else {
+      // Mid-height waist slight taper where spalling occurs
+      const mid = (t - 0.25) / 0.3;
+      flare -= Math.sin(mid * Math.PI) * 0.06;
+    }
+
+    // Organic rock cleavage, chiseled ribs, and natural geological noise
+    const rockNoise =
+      Math.sin(v.y * 6.5 + angle * 3.0) * 0.055 +
+      Math.cos(v.y * 12.0 + angle * 7.0) * 0.035 +
+      Math.sin(v.y * 22.0 - angle * 5.0) * 0.02 +
+      Math.cos(angle * 12.0) * 0.025;
+
+    const finalR = baseRadius * flare + rockNoise;
+
+    v.x = Math.cos(angle) * finalR;
+    v.z = Math.sin(angle) * finalR;
+
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+
+  geo.computeVertexNormals();
+  return geo;
+}
+
 export function Mine3DScene() {
   const containerRef = useRef<HTMLDivElement>(null);
   const {
@@ -363,6 +576,11 @@ export function Mine3DScene() {
 
     const sandstoneTexture = createSandstoneTexture();
     sandstoneTexture.repeat.set(3, 1);
+
+    const rockTexture = createSedimentaryRockTexture();
+    rockTexture.repeat.set(1.0, 1.0);
+    const rockBump = createRockBumpMap();
+    rockBump.repeat.set(1.0, 1.0);
 
     // 6. Realistic Lighting
     const ambientLight = new THREE.AmbientLight(isDarkMode ? 0x1e293b : 0xf1f5f9, isDarkMode ? 0.95 : 1.3);
@@ -733,7 +951,18 @@ export function Mine3DScene() {
     // SPACING EXPANDED TO 6.4 UNITS (4.2m Clear Gallery Width - Zero Congestion!)
     // =========================================================================
     const pillarMeshes = new Map<string, THREE.Mesh>();
-    const pillarGeo = new THREE.BoxGeometry(2.2, 3.4, 2.2, 4, 4, 4);
+    const pillarGeo = createSculptedRockPillarGeometry();
+
+    // Natural spall rock rubble material & geometry
+    const rubbleMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: rockTexture,
+      bumpMap: rockBump,
+      bumpScale: 0.22,
+      roughness: 0.96,
+      metalness: 0.02,
+    });
+    const rubbleGeo = new THREE.DodecahedronGeometry(0.24, 1);
 
     const spacing = 6.4; // Spacious, open, un-congested room-and-pillar extraction
     const offset = (3 * spacing) / 2; // = 9.6
@@ -745,12 +974,12 @@ export function Mine3DScene() {
       const posZ = row * spacing - offset;
 
       const pMat = new THREE.MeshStandardMaterial({
-        color: 0x1c222e,
-        map: coalTexture,
-        bumpMap: coalBump,
-        bumpScale: 0.16,
-        roughness: 0.72,
-        metalness: 0.25,
+        color: 0xffffff,
+        map: rockTexture,
+        bumpMap: rockBump,
+        bumpScale: 0.26,
+        roughness: 0.94,
+        metalness: 0.02,
         emissive: new THREE.Color(0x000000),
         emissiveIntensity: 0,
       });
@@ -761,30 +990,28 @@ export function Mine3DScene() {
       mesh.receiveShadow = true;
       mesh.userData = { pillarId: p.id };
 
-      // Base reinforced footing pad
-      const footingGeo = new THREE.BoxGeometry(2.5, 0.22, 2.5);
-      const footingMat = new THREE.MeshStandardMaterial({
-        color: isDarkMode ? 0x0f172a : 0x94a3b8,
-        roughness: 0.9,
+      // Natural blasted rock talus & spall rubble chunks at pillar base
+      const rubbleOffsets = [
+        [1.35, -1.6, 1.2],
+        [-1.3, -1.6, 1.25],
+        [1.25, -1.6, -1.3],
+        [-1.35, -1.6, -1.2],
+        [0.85, -1.62, 1.4],
+      ];
+      rubbleOffsets.forEach(([rx, ry, rz], idx) => {
+        const chunk = new THREE.Mesh(rubbleGeo, rubbleMat);
+        chunk.position.set(rx, ry, rz);
+        chunk.rotation.set(idx * 0.9, idx * 1.4, idx * 0.6);
+        chunk.scale.set(0.75 + (idx % 3) * 0.25, 0.55 + (idx % 2) * 0.25, 0.85);
+        chunk.castShadow = true;
+        chunk.receiveShadow = true;
+        mesh.add(chunk);
       });
-      const footing = new THREE.Mesh(footingGeo, footingMat);
-      footing.position.y = -1.6;
-      mesh.add(footing);
-
-      // Roof contact cap plate
-      const capGeo = new THREE.BoxGeometry(2.4, 0.12, 2.4);
-      const capMat = new THREE.MeshStandardMaterial({
-        color: 0x334155,
-        metalness: 0.6,
-      });
-      const cap = new THREE.Mesh(capGeo, capMat);
-      cap.position.y = 1.65;
-      mesh.add(cap);
 
       // Real Hardware Sensor Probe mounted on critical pillars P-06 and P-10
       if (p.id === 'P-06' || p.id === 'P-10') {
         const probeGroup = new THREE.Group();
-        probeGroup.position.set(1.15, 0, 0); // Mounted on pillar rib
+        probeGroup.position.set(1.18, 0, 0); // Mounted on rock rib
 
         // BF350 Strain sensor probe enclosure
         const probeBox = new THREE.Mesh(
@@ -993,21 +1220,21 @@ export function Mine3DScene() {
 
         if (pillar.status === 'critical' || pillar.factorOfSafety < 1.3) {
           const pulse = Math.sin(elapsedTime * 9) * 0.4 + 0.6;
-          mat.color.setHex(0xef4444);
+          mat.color.setHex(0xffaaaa);
           mat.emissive.setHex(0xdc2626);
-          mat.emissiveIntensity = pulse * 2.0;
+          mat.emissiveIntensity = pulse * 1.8;
         } else if (pillar.status === 'stressed' || pillar.factorOfSafety < 1.9) {
           const pulse = Math.sin(elapsedTime * 4) * 0.2 + 0.4;
-          mat.color.setHex(0xf59e0b);
+          mat.color.setHex(0xffdfaa);
           mat.emissive.setHex(0xd97706);
           mat.emissiveIntensity = pulse * 1.0;
         } else {
           if (isSelected) {
-            mat.color.setHex(0xf95721);
+            mat.color.setHex(0xffffff);
             mat.emissive.setHex(0xf95721);
-            mat.emissiveIntensity = 0.7;
+            mat.emissiveIntensity = 0.55;
           } else {
-            mat.color.setHex(isDarkMode ? 0x222a38 : 0x5a6578);
+            mat.color.setHex(0xffffff);
             mat.emissive.setHex(0x000000);
             mat.emissiveIntensity = 0;
           }
