@@ -533,6 +533,25 @@ export function Mine3DScene() {
   const isLayerPinnedRef = useRef(false);
   isLayerPinnedRef.current = activeLayer?.pinned ?? false;
 
+  // Strata opacity state: false = dense/visible (default 0.85/0.88), true = transparent (0.28/0.32)
+  const [isTransparentStrata, setIsTransparentStrata] = useState(false);
+  const isTransparentStrataRef = useRef(false);
+  isTransparentStrataRef.current = isTransparentStrata;
+  const sandstoneMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const shaleMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
+
+  const toggleTransparentStrata = (transparent: boolean) => {
+    setIsTransparentStrata(transparent);
+    if (sandstoneMatRef.current) {
+      sandstoneMatRef.current.opacity = transparent ? 0.28 : 0.85;
+      sandstoneMatRef.current.needsUpdate = true;
+    }
+    if (shaleMatRef.current) {
+      shaleMatRef.current.opacity = transparent ? 0.32 : 0.88;
+      shaleMatRef.current.needsUpdate = true;
+    }
+  };
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -857,12 +876,13 @@ export function Mine3DScene() {
     // Stratified Geological Layer 1: Barakar Sandstone Strata (RL -80m)
     const sandstoneGeo = new THREE.BoxGeometry(31.6, 2.4, 31.6);
     const sandstoneMat = new THREE.MeshStandardMaterial({
-      color: isDarkMode ? 0x2e3a4e : 0xb45309,
+      color: isDarkMode ? 0x9a5b28 : 0xb45309,
       map: sandstoneTexture,
       transparent: true,
-      opacity: 0.28,
-      roughness: 0.8,
+      opacity: isTransparentStrataRef.current ? 0.28 : 0.85,
+      roughness: 0.75,
     });
+    sandstoneMatRef.current = sandstoneMat;
     const sandstone = new THREE.Mesh(sandstoneGeo, sandstoneMat);
     sandstone.position.y = -3.2;
     sandstone.userData = { layerId: 'sandstone' };
@@ -871,11 +891,12 @@ export function Mine3DScene() {
     // Stratified Geological Layer 2: Carbonaceous Shale & Mudstone (RL -160m)
     const shaleGeo = new THREE.BoxGeometry(31.2, 2.8, 31.2);
     const shaleMat = new THREE.MeshStandardMaterial({
-      color: isDarkMode ? 0x1c2434 : 0x475569,
+      color: isDarkMode ? 0x2b374a : 0x475569,
       transparent: true,
-      opacity: 0.32,
-      roughness: 0.85,
+      opacity: isTransparentStrataRef.current ? 0.32 : 0.88,
+      roughness: 0.8,
     });
+    shaleMatRef.current = shaleMat;
     const shale = new THREE.Mesh(shaleGeo, shaleMat);
     shale.position.y = -7.2;
     shale.userData = { layerId: 'shale' };
@@ -1617,7 +1638,7 @@ export function Mine3DScene() {
           </p>
         </div>
 
-        {/* Bottom Right: Color Legend & Subsidence Indicator */}
+        {/* Bottom Right: Color Legend, Subsidence Indicator & Translucent Strata Toggle */}
         <div className="absolute bottom-4 right-4 p-3 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 shadow-lg text-xs space-y-1.5 pointer-events-auto">
           {isSubsidenceSimActive && (
             <div className="flex items-center gap-1.5 pb-1.5 mb-1.5 border-b border-slate-200 dark:border-slate-700 text-red-500 font-bold text-[11px] animate-pulse">
@@ -1636,6 +1657,19 @@ export function Mine3DScene() {
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-md bg-red-500 shadow-sm animate-pulse" />
             <span className="text-slate-700 dark:text-slate-300 font-medium">FoS &lt; 1.5 (Critical Yield)</span>
+          </div>
+
+          {/* Extreme Bottom Right Checkbox: Transparent Overburden Strata Toggle */}
+          <div className="pt-2 mt-1 border-t border-slate-200 dark:border-slate-800">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+              <input
+                type="checkbox"
+                checked={isTransparentStrata}
+                onChange={(e) => toggleTransparentStrata(e.target.checked)}
+                className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-600 text-[#e64a19] focus:ring-[#e64a19] focus:ring-offset-0 bg-white dark:bg-slate-800 cursor-pointer accent-[#e64a19]"
+              />
+              <span>Transparent Upper Strata</span>
+            </label>
           </div>
         </div>
       </div>
