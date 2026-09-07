@@ -1300,6 +1300,29 @@ proven; the firmware is the untested half. Before the demo, also resolve the
 
 **Verification**: `npm run build` compiled 10/10 routes with zero errors. Next.js server restarted on port 3005. Verified on `http://localhost:3005/model`.
 
+### 2026-09-07 — Removal of Tension Fissure Sensor & 3-Card Balanced Surface Layout
+
+**User Request**:
+- "Among those 4 remove the Tension fissure since we are not using on this sensor. Make sure the frontend style is not compromised and it should look appealing"
+
+**What was built:**
+1. **`components/SurfaceTelemetrySection.tsx`**:
+   - Removed Tension Fissure card completely.
+   - Refactored `SurfaceMetricCards` into a responsive 3-column grid (`grid grid-cols-1 sm:grid-cols-3 gap-3.5`).
+   - The 3 remaining actual surface sensors are:
+     1. **Ground Subsidence** (Linear Potentiometer 50mm)
+     2. **Surface Slope Tilt** (MPU-6050 6-DOF IMU)
+     3. **Surface Vibration** (MPU-6050 Dynamic PPV)
+   - When paired with `RiskGaugeCard` (1 col) in `app/dashboard/page.tsx` (`lg:col-span-3` + `lg:col-span-1`), the 3 surface cards + Risk Gauge form an immaculate, 1:1:1:1 4-column balanced dashboard row on desktop.
+   - Updated `SurfaceGraphCard` area chart to track Ground Subsidence (Linear Pot 50mm) without Tension Fissure traces.
+2. **`app/dashboard/page.tsx`**:
+   - Updated the `Above Surface` tab button badge count from `4` to `3`.
+3. **`lib/constants.ts`**:
+   - Removed `NODE-SF-POT-02` (Tension Fissure Potentiometer) from `INITIAL_SENSOR_NODES`.
+
+**Verification**: `npm run build` compiled 10/10 routes with zero errors. Next.js server running on port 3005. Verified on `http://localhost:3005/dashboard`.
+
+
 
 
 

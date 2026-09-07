@@ -65,7 +65,7 @@ export default function DashboardPage() {
             <span className={`text-[10px] font-mono px-1 rounded ${
               activeTelemetryTab === 'surface' ? 'bg-sky-700/80 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
             }`}>
-              4
+              3
             </span>
           </button>
 
