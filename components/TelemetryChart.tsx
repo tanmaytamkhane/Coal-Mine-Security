@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -11,10 +11,9 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { useDashboardStore } from '../lib/store';
-import { THRESHOLDS } from '../lib/constants';
 import { TelemetryPoint } from '../types';
 
-type MetricKey = 'strain' | 'tilt' | 'geophone';
+type MetricKey = 'strain' | 'tilt' | 'geophone' | 'methane' | 'surface_disp';
 
 export function TelemetryChart() {
   const [mounted, setMounted] = useState(false);
@@ -43,37 +42,55 @@ export function TelemetryChart() {
     fillId: string;
   }> = {
     strain: {
-      label: 'Microstrain (µε)',
-      dataKey: 'strainMicrostrain',
+      label: 'BF350 Pillar Strain (µε)',
+      dataKey: 'undergroundStrainMicrostrain',
       unit: 'µε',
-      warningVal: THRESHOLDS.strain.warning,
-      criticalVal: THRESHOLDS.strain.critical,
-      strokeColor: '#f95721',
+      warningVal: 350.0,
+      criticalVal: 600.0,
+      strokeColor: '#e64a19',
       fillId: 'strainGradient',
     },
     tilt: {
-      label: 'MEMS Tilt Angle (°)',
-      dataKey: 'tiltAngleDeg',
+      label: 'MPU-6050 Strata Tilt (°)',
+      dataKey: 'undergroundTiltDeg',
       unit: '°',
-      warningVal: THRESHOLDS.tilt.warning,
-      criticalVal: THRESHOLDS.tilt.critical,
+      warningVal: 1.50,
+      criticalVal: 3.00,
       strokeColor: '#f59e0b',
       fillId: 'tiltGradient',
     },
     geophone: {
-      label: 'Geophone PPV (mm/s)',
-      dataKey: 'geophoneVelocityMms',
+      label: 'MPU-6050 Strata PPV (mm/s)',
+      dataKey: 'undergroundVibrationMms',
       unit: 'mm/s',
-      warningVal: THRESHOLDS.geophone.warning,
-      criticalVal: THRESHOLDS.geophone.critical,
+      warningVal: 5.00,
+      criticalVal: 12.00,
       strokeColor: '#ef4444',
       fillId: 'geoGradient',
+    },
+    methane: {
+      label: 'MQ-4 Methane Concentration (% LEL)',
+      dataKey: 'methanePctLel',
+      unit: '% LEL',
+      warningVal: 0.80,
+      criticalVal: 1.25,
+      strokeColor: '#10b981',
+      fillId: 'methaneGradient',
+    },
+    surface_disp: {
+      label: 'Surface Linear Potentiometer (mm)',
+      dataKey: 'surfaceDisplacementMm',
+      unit: 'mm',
+      warningVal: 10.0,
+      criticalVal: 25.0,
+      strokeColor: '#0284c7',
+      fillId: 'surfaceGradient',
     },
   };
 
   const currentCfg = metricConfig[activeMetric];
   const lastPoint = telemetryHistory.length > 0 ? telemetryHistory[telemetryHistory.length - 1] : null;
-  const latestVal = lastPoint ? Number(lastPoint[currentCfg.dataKey]) : 0;
+  const latestVal = lastPoint ? Number(lastPoint[currentCfg.dataKey] ?? lastPoint.strainMicrostrain ?? 0) : 0;
 
   return (
     <div className="bg-white dark:bg-[#111726] rounded-2xl p-6 border border-gray-100 dark:border-slate-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-colors flex flex-col justify-between">
@@ -82,48 +99,68 @@ export function TelemetryChart() {
         <div>
           <div className="flex items-center gap-2">
             <h3 className="text-base font-bold text-gray-900 dark:text-white">
-              Underground Telemetry Analytics
+              Strata Telemetry Dynamic Analytics
             </h3>
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-safety-50 dark:bg-safety-950/60 text-safety-600 dark:text-safety-400 border border-safety-200/60 dark:border-safety-800/60">
               Live Stream
             </span>
           </div>
           <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-            Real-time strata deformation readings fused with DGMS safety benchmarks
+            Real-time multi-channel readings fused with DGMS CMR-111 safety limits
           </p>
         </div>
 
         {/* Metric Selector Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-gray-50 dark:bg-slate-900/80 rounded-xl border border-gray-200/80 dark:border-slate-800">
+        <div className="flex items-center gap-1 p-1 bg-gray-50 dark:bg-slate-900/80 rounded-xl border border-gray-200/80 dark:border-slate-800 flex-wrap">
           <button
             onClick={() => setActiveMetric('strain')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
               activeMetric === 'strain'
-                ? 'bg-safety-500 text-white shadow-sm shadow-safety-500/30'
+                ? 'bg-[#e64a19] text-white shadow-xs'
                 : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            Strain (µε)
+            BF350 (µε)
           </button>
           <button
             onClick={() => setActiveMetric('tilt')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
               activeMetric === 'tilt'
-                ? 'bg-safety-500 text-white shadow-sm shadow-safety-500/30'
+                ? 'bg-[#e64a19] text-white shadow-xs'
                 : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            Tilt (°)
+            MPU Tilt (°)
           </button>
           <button
             onClick={() => setActiveMetric('geophone')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
               activeMetric === 'geophone'
-                ? 'bg-safety-500 text-white shadow-sm shadow-safety-500/30'
+                ? 'bg-[#e64a19] text-white shadow-xs'
                 : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            Geophone (mm/s)
+            MPU Vib (mm/s)
+          </button>
+          <button
+            onClick={() => setActiveMetric('methane')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+              activeMetric === 'methane'
+                ? 'bg-[#e64a19] text-white shadow-xs'
+                : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            MQ-4 Gas (% LEL)
+          </button>
+          <button
+            onClick={() => setActiveMetric('surface_disp')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+              activeMetric === 'surface_disp'
+                ? 'bg-sky-600 text-white shadow-xs'
+                : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            Surface Pot (mm)
           </button>
         </div>
       </div>
@@ -170,6 +207,14 @@ export function TelemetryChart() {
               <linearGradient id="geoGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
                 <stop offset="95%" stopColor="#ef4444" stopOpacity={0.02} />
+              </linearGradient>
+              <linearGradient id="methaneGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
+              </linearGradient>
+              <linearGradient id="surfaceGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#0284c7" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#0284c7" stopOpacity={0.02} />
               </linearGradient>
             </defs>
 

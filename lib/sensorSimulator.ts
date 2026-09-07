@@ -1,6 +1,5 @@
-﻿import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDashboardStore } from './store';
-import { THRESHOLDS } from './constants';
 import { Alert, TelemetryPoint, Pillar, SensorNode } from '../types';
 
 let audioCtx: AudioContext | null = null;
@@ -68,9 +67,22 @@ export function useSensorSimulator() {
       const driftCos = Math.cos(t * 0.1);
       const noise = (Math.random() - 0.5);
 
-      let currentStrain = 145 + driftSine * 6 + noise * 3;
+      // ----------------------------------------------------
+      // Above the Surface Telemetry Baseline (SF-01 / SF-02)
+      // ----------------------------------------------------
+      let surfDisp = 1.25 + driftSine * 0.08 + noise * 0.04;
+      let surfCrack = 0.85 + driftCos * 0.05 + noise * 0.03;
+      let surfTilt = 0.14 + driftCos * 0.02 + noise * 0.01;
+      let surfVib = 0.08 + Math.abs(noise) * 0.03;
+
+      // ----------------------------------------------------
+      // Underground Strata Telemetry Baseline (UG-01 / UG-02)
+      // ----------------------------------------------------
+      let currentStrain = 142.5 + driftSine * 6 + noise * 3;
       let currentTilt = 0.36 + driftCos * 0.03 + noise * 0.01;
-      let currentGeophone = 0.18 + Math.abs(noise) * 0.12;
+      let currentGeophone = 0.22 + Math.abs(noise) * 0.08;
+      let currentMethane = 0.22 + Math.abs(driftSine) * 0.04 + Math.abs(noise) * 0.02;
+      let currentConvergence = 3.2 + driftSine * 0.2 + noise * 0.1;
 
       let currentRisk = 22 + Math.round(driftSine * 4);
       let riskStatus: 'normal' | 'caution' | 'critical' = 'normal';
@@ -78,13 +90,19 @@ export function useSensorSimulator() {
       let newAlert: Alert | undefined = undefined;
 
       if (isSim) {
-        const strainMultiplier = 1 + progress * 3.8;
-        const tiltMultiplier = 1 + progress * 8.5;
-        const geoMultiplier = 1 + progress * 65.0;
+        // Surface progression
+        surfDisp = surfDisp + progress * 24.5;       // up to ~26 mm
+        surfCrack = surfCrack + progress * 16.2;     // up to ~17 mm
+        surfTilt = surfTilt + progress * 1.82;       // up to ~2.0°
+        surfVib = surfVib + progress * 4.2;          // up to ~4.3 mm/s
 
-        currentStrain = currentStrain * strainMultiplier;
-        currentTilt = currentTilt * tiltMultiplier;
-        currentGeophone = currentGeophone * geoMultiplier;
+        // Underground progression
+        currentStrain = currentStrain + progress * 480.0; // up to ~625 µε
+        currentTilt = currentTilt + progress * 3.25;      // up to ~3.6°
+        currentGeophone = currentGeophone + progress * 13.8; // up to ~14.0 mm/s
+        currentMethane = currentMethane + progress * 1.15;  // up to ~1.40% LEL
+        currentConvergence = currentConvergence + progress * 28.0;
+
         currentRisk = Math.min(96, Math.round(24 + progress * 72));
 
         if (progress > 0.4 && progress < 0.75) {
@@ -95,10 +113,10 @@ export function useSensorSimulator() {
             newAlert = {
               id: `ALT-${Date.now().toString().slice(-4)}`,
               timestamp: 'Just now',
-              title: 'CAUTION: Accelerated Roof Strata Dilation',
-              message: `Pillar P-06 strain reached ${Math.round(currentStrain)} µε. Exceeds DGMS Level-1 trigger limit.`,
+              title: 'CAUTION: Underground Strain Acceleration & Surface Crack Dilation',
+              message: `Pillar P-06 strain reached ${Math.round(currentStrain)} µε (BF350/HX711). Surface Linear Potentiometer detected ${surfDisp.toFixed(1)} mm ground subsidence.`,
               severity: 'warning',
-              nodeId: 'NODE-SG-01',
+              nodeId: 'NODE-UG-BF350-01',
               coalfield: 'Jharia Colliery — Block IV',
               acknowledged: false,
               dgmsCode: 'DGMS/S&T/CMR-111B',
@@ -112,10 +130,10 @@ export function useSensorSimulator() {
             newAlert = {
               id: `ALT-${Date.now().toString().slice(-4)}`,
               timestamp: 'Just now',
-              title: 'CRITICAL EMERGENCY: Strata Subsidence Imminent',
-              message: `Pillar P-06 / P-11 yielded. Factor of Safety dropped to 0.92. Triggering automated mine evacuation protocol.`,
+              title: 'CRITICAL EMERGENCY: Multi-Level Strata Subsidence Breach',
+              message: `Underground Pillar P-06 / P-11 yielded (FoS 0.91). Surface Potentiometer breached ${surfDisp.toFixed(1)} mm. Methane MQ-4 reached ${currentMethane.toFixed(2)}% LEL. Evacuate subterranean and surface danger perimeter.`,
               severity: 'critical',
-              nodeId: 'NODE-TM-01',
+              nodeId: 'NODE-SF-POT-01',
               coalfield: 'Jharia Colliery — Block IV',
               acknowledged: false,
               dgmsCode: 'DGMS/FORM-IV/EMERGENCY',
@@ -139,8 +157,8 @@ export function useSensorSimulator() {
             strain_microstrain: currentStrain,
             tilt_deg: currentTilt,
             vib_rms_g: currentGeophone / 10.0,
-            crack_width_mm: isSim ? 1.2 + progress * 14.0 : 1.2,
-            convergence_m: isSim ? 0.015 + progress * 0.4 : 0.015,
+            crack_width_mm: surfCrack,
+            convergence_m: currentConvergence / 1000.0,
             depth_z: 248.0,
             safety_factor: isSim ? Math.max(0.85, 2.2 - progress * 1.3) : 2.2,
             is_simulation_active: isSim,
@@ -164,31 +182,66 @@ export function useSensorSimulator() {
         state.setMlStatus(false, 'XGBoost (In-Browser)', {});
       }
 
-      // Update Individual Sensor Nodes
+      // Update Individual Sensor Nodes for both Surface & Underground
       const updatedSensors: SensorNode[] = state.sensors.map((sensor) => {
         let val = sensor.currentValue;
         let sStatus: SensorNode['status'] = 'normal';
+        let raw = sensor.rawSignal || '';
 
-        if (sensor.type === 'strain_gauge') {
-          const isFailingNode = sensor.id === 'NODE-SG-01' || sensor.id === 'NODE-SG-02';
-          val = isFailingNode ? currentStrain : 135 + noise * 4;
-          if (val >= THRESHOLDS.strain.critical) sStatus = 'critical';
-          else if (val >= THRESHOLDS.strain.warning) sStatus = 'warning';
-        } else if (sensor.type === 'tiltmeter') {
-          const isFailingTilt = sensor.id === 'NODE-TM-01' || sensor.id === 'NODE-TM-02';
-          val = isFailingTilt ? currentTilt : 0.32 + noise * 0.02;
-          if (val >= THRESHOLDS.tilt.critical) sStatus = 'critical';
-          else if (val >= THRESHOLDS.tilt.warning) sStatus = 'warning';
-        } else if (sensor.type === 'geophone') {
-          val = currentGeophone;
-          if (val >= THRESHOLDS.geophone.critical) sStatus = 'critical';
-          else if (val >= THRESHOLDS.geophone.warning) sStatus = 'warning';
+        if (sensor.domain === 'surface' || sensor.type === 'linear_pot') {
+          if (sensor.id === 'NODE-SF-POT-01') {
+            val = surfDisp;
+            raw = `ADC 12-bit: ${Math.round((val / 50) * 4095)}/4095 (${((val / 50) * 3.3).toFixed(2)}V)`;
+            if (val >= 25.0) sStatus = 'critical';
+            else if (val >= 10.0) sStatus = 'warning';
+          } else if (sensor.id === 'NODE-SF-POT-02') {
+            val = surfCrack;
+            raw = `Extensometer: ${val.toFixed(2)}mm (${Math.round((val / 100) * 4095)} counts)`;
+            if (val >= 20.0) sStatus = 'critical';
+            else if (val >= 8.0) sStatus = 'warning';
+          } else if (sensor.type === 'mpu6050_tilt' || sensor.id === 'NODE-SF-MPU-01') {
+            val = surfTilt;
+            raw = `Pitch: +${val.toFixed(2)}° | Roll: -${(val * 0.4).toFixed(2)}°`;
+            if (val >= 1.80) sStatus = 'critical';
+            else if (val >= 0.80) sStatus = 'warning';
+          } else if (sensor.type === 'mpu6050_vib' || sensor.id === 'NODE-SF-MPU-02') {
+            val = surfVib;
+            raw = `RMS Accel: ${(val * 0.1).toFixed(3)}g (PPV: ${val.toFixed(2)} mm/s)`;
+            if (val >= 6.0) sStatus = 'critical';
+            else if (val >= 2.5) sStatus = 'warning';
+          }
+        } else {
+          // Underground Domain
+          if (sensor.type === 'bf350_strain' || sensor.type === 'strain_gauge') {
+            const isFailingNode = sensor.id === 'NODE-UG-BF350-01' || sensor.id === 'NODE-SG-01';
+            val = isFailingNode ? currentStrain : 138 + noise * 4;
+            raw = `HX711 24-bit: ${Math.round(val * 21.0 * 1000).toLocaleString()} counts`;
+            if (val >= 600.0) sStatus = 'critical';
+            else if (val >= 350.0) sStatus = 'warning';
+          } else if (sensor.type === 'mpu6050_tilt' || sensor.type === 'tiltmeter') {
+            const isFailingTilt = sensor.id === 'NODE-UG-MPU-01' || sensor.id === 'NODE-TM-01';
+            val = isFailingTilt ? currentTilt : 0.32 + noise * 0.02;
+            raw = `Roof Delamination Pitch: +${val.toFixed(2)}°`;
+            if (val >= 3.0) sStatus = 'critical';
+            else if (val >= 1.5) sStatus = 'warning';
+          } else if (sensor.type === 'mpu6050_vib' || sensor.type === 'geophone') {
+            val = currentGeophone;
+            raw = `PPV Peak: ${val.toFixed(2)} mm/s @ 32Hz`;
+            if (val >= 12.0) sStatus = 'critical';
+            else if (val >= 5.0) sStatus = 'warning';
+          } else if (sensor.type === 'mq4_gas') {
+            val = currentMethane;
+            raw = `Analog Rs/Ro: ${(15.0 - val * 6).toFixed(1)}kΩ (~${Math.round(val * 500)} ppm CH4)`;
+            if (val >= 1.25) sStatus = 'critical';
+            else if (val >= 0.80) sStatus = 'warning';
+          }
         }
 
         return {
           ...sensor,
           currentValue: Math.round(val * 100) / 100,
           status: sStatus,
+          rawSignal: raw,
           lastUpdated: 'Just now',
         };
       });
@@ -219,10 +272,26 @@ export function useSensorSimulator() {
       const newTelemetry: TelemetryPoint = {
         timestamp: Date.now(),
         timeLabel,
+        riskScore: currentRisk,
+
+        // Above the Surface
+        surfaceDisplacementMm: Math.round(surfDisp * 100) / 100,
+        surfaceCrackWidthMm: Math.round(surfCrack * 100) / 100,
+        surfaceTiltDeg: Math.round(surfTilt * 100) / 100,
+        surfaceVibrationMms: Math.round(surfVib * 100) / 100,
+
+        // Underground
+        undergroundStrainMicrostrain: Math.round(currentStrain * 10) / 10,
+        undergroundHx711Counts: Math.round(currentStrain * 21.0 * 1000),
+        undergroundTiltDeg: Math.round(currentTilt * 100) / 100,
+        undergroundVibrationMms: Math.round(currentGeophone * 100) / 100,
+        methanePctLel: Math.round(currentMethane * 100) / 100,
+        convergenceMm: Math.round(currentConvergence * 10) / 10,
+
+        // Legacy / Rollup
         strainMicrostrain: Math.round(currentStrain * 10) / 10,
         tiltAngleDeg: Math.round(currentTilt * 100) / 100,
         geophoneVelocityMms: Math.round(currentGeophone * 100) / 100,
-        riskScore: currentRisk,
       };
 
       state.updateTick(

@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand';
+import { create } from 'zustand';
 import { SensorNode, Pillar, TelemetryPoint, Alert } from '../types';
 import { INITIAL_SENSOR_NODES, INITIAL_PILLARS, INITIAL_ALERTS, COALFIELD_ZONES } from './constants';
 
@@ -44,13 +44,34 @@ const generateInitialTelemetry = (): TelemetryPoint[] => {
     const timeLabel = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const wave = Math.sin(i * 0.3) * 6;
     const noise = (Math.random() - 0.5) * 4;
+
+    const strain = Math.round((145 + wave + noise) * 10) / 10;
+    const ugTilt = Math.round((0.35 + Math.sin(i * 0.2) * 0.04 + (Math.random() - 0.5) * 0.02) * 100) / 100;
+    const ugVib = Math.round((0.18 + Math.abs(Math.sin(i * 0.5) * 0.1) + Math.random() * 0.08) * 100) / 100;
+
     points.push({
       timestamp: t,
       timeLabel,
-      strainMicrostrain: Math.round((145 + wave + noise) * 10) / 10,
-      tiltAngleDeg: Math.round((0.35 + Math.sin(i * 0.2) * 0.04 + (Math.random() - 0.5) * 0.02) * 100) / 100,
-      geophoneVelocityMms: Math.round((0.18 + Math.abs(Math.sin(i * 0.5) * 0.1) + Math.random() * 0.08) * 100) / 100,
       riskScore: Math.round(22 + Math.sin(i * 0.15) * 4),
+
+      // Above the Surface
+      surfaceDisplacementMm: Math.round((1.25 + Math.sin(i * 0.25) * 0.15 + (Math.random() - 0.5) * 0.05) * 100) / 100,
+      surfaceCrackWidthMm: Math.round((0.85 + Math.cos(i * 0.2) * 0.1 + (Math.random() - 0.5) * 0.03) * 100) / 100,
+      surfaceTiltDeg: Math.round((0.14 + Math.sin(i * 0.18) * 0.02 + (Math.random() - 0.5) * 0.01) * 100) / 100,
+      surfaceVibrationMms: Math.round((0.08 + Math.abs(Math.sin(i * 0.4) * 0.04) + Math.random() * 0.02) * 100) / 100,
+
+      // Underground
+      undergroundStrainMicrostrain: strain,
+      undergroundHx711Counts: Math.round(strain * 21.0 * 1000),
+      undergroundTiltDeg: ugTilt,
+      undergroundVibrationMms: ugVib,
+      methanePctLel: Math.round((0.22 + Math.sin(i * 0.3) * 0.03 + Math.random() * 0.02) * 100) / 100,
+      convergenceMm: Math.round((3.2 + Math.sin(i * 0.15) * 0.3) * 10) / 10,
+
+      // Legacy / Rollup
+      strainMicrostrain: strain,
+      tiltAngleDeg: ugTilt,
+      geophoneVelocityMms: ugVib,
     });
   }
   return points;
