@@ -281,72 +281,80 @@ function createSandstoneTexture(width = 512, height = 512): THREE.CanvasTexture 
   return texture;
 }
 
-// Procedural texture for realistic colliery rock pillars (matching authentic underground photos)
+// Procedural texture for realistic black coal rock pillars (bituminous & anthracite strata)
 function createSedimentaryRockTexture(width = 1024, height = 1024): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d')!;
 
-  // Base sedimentary warm stone gradient
+  // 1. Base deep coal black gradient with subtle dark mineral variations
   const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-  bgGrad.addColorStop(0, '#cca072');   // Top roof contact: warm sandstone
-  bgGrad.addColorStop(0.18, '#a3764c'); // Upper sedimentary layer
-  bgGrad.addColorStop(0.38, '#c2925f'); // Middle ochre band
-  bgGrad.addColorStop(0.58, '#82593b'); // Dense lower rock
-  bgGrad.addColorStop(0.78, '#ad8054'); // Tawny strata
-  bgGrad.addColorStop(1, '#66452d');   // Base footing rock
+  bgGrad.addColorStop(0, '#1c222b');   // Top roof contact: carbonaceous shale-coal boundary
+  bgGrad.addColorStop(0.2, '#14181f'); // Dense bituminous coal layer
+  bgGrad.addColorStop(0.4, '#0d1014'); // Jet-black vitrinite seam
+  bgGrad.addColorStop(0.6, '#181e26'); // Middle anthracite band
+  bgGrad.addColorStop(0.8, '#10141a'); // Dark carbonaceous strata
+  bgGrad.addColorStop(1, '#090b0e');   // Deep coal floor contact
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
 
-  // Continuous fine horizontal sedimentary bedding bands
+  // 2. Horizontal coal bedding planes (alternating dull durain & lustrous vitrain bands)
   for (let y = 0; y < height; y += 3) {
-    const bandHeight = Math.random() * 7 + 2;
-    const r = Math.floor(150 + Math.random() * 65);
-    const g = Math.floor(110 + Math.random() * 55);
-    const b = Math.floor(70 + Math.random() * 40);
-    const alpha = Math.random() * 0.35 + 0.15;
-    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    const bandHeight = Math.random() * 6 + 2;
+    const isLustrous = Math.random() > 0.65;
+    const brightness = isLustrous ? Math.floor(40 + Math.random() * 35) : Math.floor(12 + Math.random() * 18);
+    const alpha = Math.random() * 0.4 + 0.2;
+    ctx.fillStyle = `rgba(${brightness}, ${brightness + 4}, ${brightness + 8}, ${alpha})`;
     ctx.fillRect(0, y, width, bandHeight);
   }
 
-  // Prominent geological strata seams (ochre, sandstone, carbonaceous shale)
-  const prominentBands = [
-    { y: 0.12 * height, h: 22, color: 'rgba(215, 172, 122, 0.7)' },
-    { y: 0.28 * height, h: 36, color: 'rgba(186, 137, 88, 0.65)' },
-    { y: 0.44 * height, h: 42, color: 'rgba(224, 185, 138, 0.75)' },
-    { y: 0.58 * height, h: 20, color: 'rgba(78, 52, 34, 0.65)' },
-    { y: 0.72 * height, h: 32, color: 'rgba(198, 150, 102, 0.7)' },
-    { y: 0.86 * height, h: 24, color: 'rgba(68, 44, 28, 0.6)' },
+  // 3. Pronounced bituminous coal fracture seams and slate parting veins
+  const prominentCoalBands = [
+    { y: 0.12 * height, h: 18, color: 'rgba(42, 50, 62, 0.65)' },
+    { y: 0.28 * height, h: 26, color: 'rgba(28, 34, 42, 0.7)' },
+    { y: 0.42 * height, h: 32, color: 'rgba(48, 58, 72, 0.6)' },
+    { y: 0.58 * height, h: 16, color: 'rgba(8, 10, 14, 0.85)' },
+    { y: 0.72 * height, h: 28, color: 'rgba(38, 46, 58, 0.7)' },
+    { y: 0.88 * height, h: 22, color: 'rgba(18, 22, 28, 0.8)' },
   ];
-  prominentBands.forEach((b) => {
+  prominentCoalBands.forEach((b) => {
     ctx.fillStyle = b.color;
     ctx.fillRect(0, b.y, width, b.h);
   });
 
-  // Natural rock pick marks, cleavage cracks & fissure grooves
-  ctx.strokeStyle = 'rgba(40, 24, 14, 0.55)';
-  for (let i = 0; i < 110; i++) {
+  // 4. Natural coal cleats (face cleats and butt cleats) & pick fracture grooves
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
+  for (let i = 0; i < 120; i++) {
     const sx = Math.random() * width;
     const sy = Math.random() * height;
     ctx.lineWidth = Math.random() * 2.5 + 0.8;
     ctx.beginPath();
     ctx.moveTo(sx, sy);
-    ctx.lineTo(sx + (Math.random() - 0.5) * 80, sy + (Math.random() - 0.5) * 15);
+    ctx.lineTo(sx + (Math.random() - 0.5) * 85, sy + (Math.random() - 0.5) * 16);
     ctx.stroke();
   }
 
-  // Fine chiseled rock speckling & quartz grain facets
-  for (let i = 0; i < 9000; i++) {
+  // Delicate calcite mineralized cleat infills (subtle light grey hairline cracks)
+  ctx.strokeStyle = 'rgba(180, 195, 215, 0.18)';
+  for (let i = 0; i < 45; i++) {
+    const sx = Math.random() * width;
+    const sy = Math.random() * height;
+    ctx.lineWidth = Math.random() * 1.2 + 0.4;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + (Math.random() - 0.5) * 40, sy + (Math.random() - 0.5) * 20);
+    ctx.stroke();
+  }
+
+  // 5. Anthracite crystalline carbon sparkle flecks
+  for (let i = 0; i < 6500; i++) {
     const px = Math.random() * width;
     const py = Math.random() * height;
-    const isBright = Math.random() > 0.6;
-    const val = isBright ? Math.floor(Math.random() * 70 + 185) : Math.floor(Math.random() * 45 + 30);
+    const brightness = Math.floor(Math.random() * 90 + 50);
     const a = Math.random() * 0.45 + 0.1;
-    ctx.fillStyle = isBright
-      ? `rgba(${val}, ${val - 15}, ${val - 35}, ${a})`
-      : `rgba(${val}, ${val}, ${val}, ${a})`;
-    ctx.fillRect(px, py, Math.random() * 2 + 1, Math.random() * 2 + 1);
+    ctx.fillStyle = `rgba(${brightness}, ${brightness + 5}, ${brightness + 12}, ${a})`;
+    ctx.fillRect(px, py, Math.random() * 1.8 + 0.8, Math.random() * 1.8 + 0.8);
   }
 
   const texture = new THREE.CanvasTexture(canvas);
