@@ -29,6 +29,8 @@ export interface SensorNode {
   zigbeeHops: number;
   lastUpdated: string;
   rawSignal?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface TelemetryPoint {
