@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import dynamic from 'next/dynamic';
@@ -65,11 +65,11 @@ export default function ModelPage() {
           <div className="flex items-center gap-2 mb-2">
             <Cpu className="w-4 h-4 text-safety-500" />
             <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-              Bieniawski Pillar Strength (FoS)
+              32 IoT Telemetry Nodes (Dual-Fleet)
             </h3>
           </div>
           <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
-            Pillars are dynamically color-coded based on live Factor of Safety: \(FoS = S_p / \sigma_p\), where \(S_p\) is empirical pillar strength and \(\sigma_p\) is overburden stress load.
+            16 Surface subsidence nodes and 16 Underground pillar-center nodes dynamically glow based on live telemetry: <strong>Green</strong> = Nominal, <strong>Red</strong> = Anomaly / Yield. Coal pillars maintain their authentic black rock strata.
           </p>
         </div>
 
@@ -81,7 +81,7 @@ export default function ModelPage() {
             </h3>
           </div>
           <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
-            During the judge simulation demo, the overhead mine roof mesh dynamically deforms with finite displacement around yielding pillars P-06, P-10, and P-11.
+            During the judge simulation drill, the overhead roof mesh dynamically deforms around yielding pillars P-06, P-10, and P-11, triggering warning red pulsing on overlying surface subsidence nodes.
           </p>
         </div>
 
@@ -89,11 +89,11 @@ export default function ModelPage() {
           <div className="flex items-center gap-2 mb-2">
             <Info className="w-4 h-4 text-blue-500" />
             <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-              Navigation & HUD Controls
+              Interactive Drill & Navigation Controls
             </h3>
           </div>
           <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
-            Drag with left mouse button to orbit 360°, right mouse button to pan, and scroll wheel to zoom. Click any 3D pillar directly to inspect its geotechnical data.
+            Click &quot;Simulate Drill&quot; in the top bar to trigger a live emergency drill. Drag left mouse to orbit 360°, right mouse to pan, and click any 3D pillar or node to inspect live geotechnical telemetry.
           </p>
         </div>
       </div>
