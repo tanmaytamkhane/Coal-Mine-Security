@@ -127,6 +127,51 @@ const STRATA_LAYERS: Record<string, StrataLayerMetadata> = {
   },
 };
 
+export interface DepthScaleMark {
+  depth: number;
+  label: string;
+  name?: string;
+  layerId?: 'topsoil' | 'sandstone' | 'shale' | 'roof' | 'floor';
+  color: string;
+  isMajor: boolean;
+}
+
+const DEPTH_SCALE_MARKS: DepthScaleMark[] = [
+  { depth: 0, label: '0 m', name: 'Ground Surface', layerId: 'topsoil', color: '#38bdf8', isMajor: true },
+  { depth: -25, label: '-25 m', color: '#64748b', isMajor: false },
+  { depth: -50, label: '-50 m', name: 'Overburden Strata', color: '#94a3b8', isMajor: true },
+  { depth: -80, label: '-80 m', name: 'Sandstone Strata', layerId: 'sandstone', color: '#f59e0b', isMajor: true },
+  { depth: -120, label: '-120 m', color: '#94a3b8', isMajor: false },
+  { depth: -160, label: '-160 m', name: 'Shale Aquitard', layerId: 'shale', color: '#a855f7', isMajor: true },
+  { depth: -200, label: '-200 m', color: '#94a3b8', isMajor: false },
+  { depth: -244.6, label: '-244.6 m', name: 'Immediate Roof', layerId: 'roof', color: '#06b6d4', isMajor: true },
+  { depth: -248, label: '-248 m', name: 'Seam XII Floor', layerId: 'floor', color: '#ef4444', isMajor: true },
+];
+
+function createDepthSprite(text: string, color = '#ffffff'): THREE.Sprite {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 72;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+  ctx.fillRect(4, 4, 248, 64);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(4, 4, 248, 64);
+
+  ctx.fillStyle = color;
+  ctx.font = 'bold 30px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 128, 36);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(2.2, 0.6, 1);
+  return sprite;
+}
+
 // Procedural texture generators for realistic coal, rock, and strata
 function createProceduralCoalTexture(width = 512, height = 512): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
@@ -641,9 +686,10 @@ export function Mine3DScene() {
     rulerPole.position.y = -7.25;
     depthRulerGroup.add(rulerPole);
 
-    // Depth collars
+    // Depth collars and 3D floating depth tags
     const collarDepths = [0, -3.2, -7.2, -14.1];
     const collarColors = [0x38bdf8, 0xf59e0b, 0xa855f7, 0xef4444];
+    const collarLabels = ['0 m', '-80 m', '-160 m', '-248 m'];
     collarDepths.forEach((cy, idx) => {
       const collar = new THREE.Mesh(
         new THREE.TorusGeometry(0.35, 0.05, 8, 16),
@@ -652,6 +698,11 @@ export function Mine3DScene() {
       collar.rotation.x = Math.PI / 2;
       collar.position.y = cy;
       depthRulerGroup.add(collar);
+
+      // 3D camera-facing billboard depth tag
+      const labelSprite = createDepthSprite(collarLabels[idx], '#' + collarColors[idx].toString(16).padStart(6, '0'));
+      labelSprite.position.set(1.6, cy, 0);
+      depthRulerGroup.add(labelSprite);
     });
 
     surfaceGroup.add(depthRulerGroup);
@@ -1191,8 +1242,102 @@ export function Mine3DScene() {
           </div>
         )}
 
+        {/* Geotechnical Vertical Side Scale of Depth in Metres */}
+        <div className="absolute left-3 top-20 z-20 pointer-events-auto select-none hidden sm:block">
+          <div className="p-2.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-xl flex flex-col items-start w-36">
+            {/* Scale Header */}
+            <div className="flex items-center justify-between w-full pb-1.5 mb-1 border-b border-slate-200 dark:border-slate-800 text-[10px] font-mono text-slate-500 dark:text-slate-400">
+              <span className="font-bold flex items-center gap-1 text-slate-800 dark:text-slate-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#e64a19]" />
+                DEPTH (m)
+              </span>
+              <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">RL Datum</span>
+            </div>
+
+            {/* Depth Markers Stack */}
+            <div className="relative flex flex-col justify-between h-[350px] w-full py-1">
+              {/* Vertical Gradient Guide Rail */}
+              <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-sky-400 via-amber-400 via-purple-500 via-cyan-400 to-red-500 opacity-60 rounded-full" />
+
+              {DEPTH_SCALE_MARKS.map((mark) => {
+                const isClickable = !!mark.layerId;
+                const isHovered = activeLayer?.layer.id === mark.layerId;
+                return (
+                  <button
+                    key={mark.depth}
+                    type="button"
+                    onClick={() => {
+                      if (mark.layerId && STRATA_LAYERS[mark.layerId]) {
+                        setActiveLayer({ layer: STRATA_LAYERS[mark.layerId], pinned: true });
+                      }
+                    }}
+                    disabled={!isClickable}
+                    title={mark.name ? `${mark.name} (${mark.label})` : mark.label}
+                    className={`group relative flex items-center gap-2 text-left w-full transition-all text-[11px] font-mono ${
+                      isClickable ? 'cursor-pointer hover:translate-x-0.5' : 'cursor-default opacity-70'
+                    }`}
+                  >
+                    {/* Tick / Node Dot */}
+                    <div className="relative z-10 flex items-center justify-center w-4 h-4">
+                      {mark.isMajor ? (
+                        <div
+                          className={`w-2.5 h-2.5 rounded-full border-2 transition-transform ${
+                            isHovered ? 'scale-125 ring-2 ring-[#e64a19]' : ''
+                          }`}
+                          style={{
+                            backgroundColor: mark.color,
+                            borderColor: isDarkMode ? '#0f172a' : '#ffffff',
+                          }}
+                        />
+                      ) : (
+                        <div className="w-2 h-0.5 bg-slate-400 dark:bg-slate-600" />
+                      )}
+                    </div>
+
+                    {/* Depth Label & Layer Name */}
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`font-bold transition-colors ${
+                            mark.isMajor
+                              ? 'text-slate-900 dark:text-white'
+                              : 'text-slate-500 dark:text-slate-400 text-[10px]'
+                          } ${isHovered ? 'text-[#e64a19] dark:text-[#ff7a45]' : ''}`}
+                        >
+                          {mark.label}
+                        </span>
+                        {mark.depth === 0 && (
+                          <span className="text-[8px] font-sans font-extrabold px-1 py-0.2 rounded bg-sky-500/15 text-sky-600 dark:text-sky-400">
+                            SURFACE
+                          </span>
+                        )}
+                        {mark.depth === -248 && (
+                          <span className="text-[8px] font-sans font-extrabold px-1 py-0.2 rounded bg-red-500/15 text-red-600 dark:text-red-400">
+                            SEAM
+                          </span>
+                        )}
+                      </div>
+                      {mark.name && (
+                        <span className="text-[9px] font-sans text-slate-400 truncate leading-tight group-hover:text-slate-600 dark:group-hover:text-slate-200">
+                          {mark.name}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Subterranean Column Summary */}
+            <div className="pt-1.5 mt-1 border-t border-slate-200 dark:border-slate-800 text-[9px] text-slate-400 w-full flex items-center justify-between">
+              <span>0m = Surface RL</span>
+              <span className="text-emerald-500 font-bold">248m Column</span>
+            </div>
+          </div>
+        </div>
+
         {/* Selected Pillar Inspector Hologram HUD */}
-        <div className="absolute bottom-4 left-4 p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 shadow-2xl max-w-sm pointer-events-auto">
+        <div className="absolute bottom-4 left-4 sm:left-44 md:left-44 p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 shadow-2xl max-w-sm pointer-events-auto">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#e64a19] animate-pulse" />
