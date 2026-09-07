@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home,
-  LayoutDashboard,
+  Activity,
   Box,
   MapPin,
   LineChart,
   BellRing,
   ShieldCheck,
-  HardHat
+  Building2
 } from 'lucide-react';
 import { useDashboardStore } from '../lib/store';
 import { COALFIELD_ZONES } from '../lib/constants';
@@ -21,100 +21,132 @@ export function Sidebar() {
   const { selectedCoalfield, setSelectedCoalfield, alerts } = useDashboardStore();
   const unreadAlerts = alerts.filter(a => !a.acknowledged && a.severity !== 'info').length;
 
-  const navItems = [
-    { label: 'Landing Page', href: '/', icon: Home },
-    { label: 'Live Console', href: '/dashboard', icon: LayoutDashboard },
-    { label: '3D Mine Model', href: '/model', icon: Box, highlight: true },
-    { label: 'Coalfield Map', href: '/map', icon: MapPin },
+  const primaryNav = [
+    { label: 'Portal Home', href: '/', icon: Home },
+    { label: 'Control Console', href: '/dashboard', icon: Activity },
+    { label: '3D Seam Model', href: '/model', icon: Box, tag: 'Bord & Pillar' },
+    { label: 'Coalfield Satellite GIS', href: '/map', icon: MapPin },
+  ];
+
+  const complianceNav = [
     { label: 'Telemetry Trends', href: '/trends', icon: LineChart },
-    { label: 'Emergency Alerts', href: '/alerts', icon: BellRing, badge: unreadAlerts > 0 ? unreadAlerts : undefined },
-    { label: 'About & DGMS', href: '/about', icon: ShieldCheck },
+    { label: 'Form-IV Incident Log', href: '/alerts', icon: BellRing, badge: unreadAlerts > 0 ? unreadAlerts : undefined },
+    { label: 'DGMS Regulations & SCAMP', href: '/about', icon: ShieldCheck },
   ];
 
   return (
-    <aside className="w-64 bg-white dark:bg-[#111726] border-r border-gray-200 dark:border-slate-800/80 flex flex-col justify-between shrink-0 transition-colors duration-200 min-h-screen select-none">
+    <aside className="w-64 bg-slate-50/70 dark:bg-[#0c1017] border-r border-slate-200 dark:border-slate-800/90 flex flex-col justify-between shrink-0 transition-colors duration-150 min-h-screen select-none font-sans">
       <div>
         {/* Brand Header */}
-        <div className="p-5 border-b border-gray-100 dark:border-slate-800/60 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f141f]">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-safety-500 to-orange-600 flex items-center justify-center text-white shadow-md shadow-safety-500/20 group-hover:scale-105 transition-transform">
-              <HardHat className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-lg bg-[#1b2537] dark:bg-[#1a2333] border border-slate-700 flex items-center justify-center text-amber-400 shrink-0">
+              <Building2 className="w-5 h-5" />
             </div>
-            <div>
-              <div className="font-bold text-gray-900 dark:text-white text-base tracking-tight flex items-center gap-1.5">
-                TASQ Coal
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-safety-50 dark:bg-safety-950/60 text-safety-600 dark:text-safety-400 border border-safety-200 dark:border-safety-800">
-                  SIH26025
-                </span>
+            <div className="overflow-hidden">
+              <div className="font-bold text-slate-900 dark:text-white text-sm tracking-tight flex items-center gap-1.5">
+                DGMS • NMS-SEWS
               </div>
-              <p className="text-[11px] text-gray-500 dark:text-slate-400">DGMS Safety Portal</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                Ministry of Coal | SIH26025
+              </p>
             </div>
           </Link>
         </div>
 
-        {/* Main Navigation */}
-        <div className="px-3 py-4">
-          <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500 mb-2">
-            Main Menu
+        {/* Section 1: Statutory Monitoring */}
+        <div className="px-3 pt-4">
+          <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+            Statutory Monitoring
           </p>
-          <nav className="space-y-1">
-            {navItems.map((item) => {
+          <nav className="space-y-0.5">
+            {primaryNav.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex items-center justify-between px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${
                     isActive
-                      ? 'bg-safety-500 text-white shadow-sm shadow-safety-500/30'
-                      : 'text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800/60 hover:text-gray-900 dark:hover:text-white'
+                      ? 'bg-[#e64a19] text-white font-semibold shadow-xs'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : item.highlight ? 'text-safety-500' : 'text-gray-500 dark:text-slate-400'}`} />
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`} />
                     <span>{item.label}</span>
                   </div>
-                  {item.badge !== undefined ? (
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                      isActive ? 'bg-white text-safety-600' : 'bg-red-500 text-white animate-pulse'
-                    }`}>
-                      {item.badge}
+                  {item.tag && !isActive && (
+                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                      {item.tag}
                     </span>
-                  ) : item.highlight && !isActive ? (
-                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-safety-50 dark:bg-safety-950 text-safety-600 dark:text-safety-400 border border-safety-200 dark:border-safety-800">
-                      3D
-                    </span>
-                  ) : null}
+                  )}
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* Coalfield Selector */}
-        <div className="px-3 py-2">
-          <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500 mb-2">
-            Monitored Coalfields
+        {/* Section 2: Analytics & Compliance */}
+        <div className="px-3 pt-4">
+          <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+            Analytics & Regulatory
           </p>
-          <div className="space-y-1.5 px-1">
+          <nav className="space-y-0.5">
+            {complianceNav.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center justify-between px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${
+                    isActive
+                      ? 'bg-[#e64a19] text-white font-semibold shadow-xs'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge !== undefined && (
+                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
+                      isActive ? 'bg-white text-[#e64a19]' : 'bg-red-600 text-white'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Section 3: Monitored Basins */}
+        <div className="px-3 pt-4">
+          <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+            DGMS Monitoring Zones
+          </p>
+          <div className="space-y-1">
             {COALFIELD_ZONES.map((zone) => {
               const isSelected = selectedCoalfield === zone.id;
               return (
                 <button
                   key={zone.id}
                   onClick={() => setSelectedCoalfield(zone.id)}
-                  className={`w-full text-left p-2.5 rounded-xl border transition-all text-xs ${
+                  className={`w-full text-left p-2 rounded border text-xs transition-colors ${
                     isSelected
-                      ? 'border-safety-500/50 bg-safety-50/60 dark:bg-safety-950/30 text-safety-700 dark:text-safety-300'
-                      : 'border-gray-200/80 dark:border-slate-800/80 bg-gray-50/50 dark:bg-slate-900/40 text-gray-600 dark:text-slate-400 hover:border-gray-300'
+                      ? 'border-slate-400 dark:border-slate-600 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white'
+                      : 'border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40'
                   }`}
                 >
-                  <div className="font-semibold flex items-center justify-between">
+                  <div className="flex items-center justify-between font-medium">
                     <span className="truncate">{zone.name.split('—')[0]}</span>
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   </div>
-                  <div className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 flex items-center justify-between">
+                  <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
                     <span>{zone.state}</span>
                     <span>{zone.activeNodes} Nodes</span>
                   </div>
@@ -125,23 +157,20 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Officer Profile Footer */}
-      <div className="p-3 border-t border-gray-100 dark:border-slate-800/60">
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-slate-900/50 border border-gray-200/70 dark:border-slate-800/70">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-safety-500 text-white font-bold flex items-center justify-center text-xs shadow-inner">
-              RV
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-xs font-semibold text-gray-800 dark:text-slate-200 truncate">
-                Insp. R. K. Verma
-              </p>
-              <p className="text-[10px] text-gray-500 dark:text-slate-400 truncate">
-                DGMS Mine Safety
-              </p>
-            </div>
+      {/* Statutory Duty Officer Footer */}
+      <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f141f]">
+        <div className="flex items-center justify-between p-2 rounded bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+          <div className="overflow-hidden">
+            <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
+              Insp. R. K. Verma
+            </p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+              Dy. Dir. of Mines Safety (DGMS)
+            </p>
           </div>
-          <div className="w-2 h-2 rounded-full bg-emerald-500" title="On Shift Duty" />
+          <div className="flex items-center gap-1" title="Statutory Duty Shift Active">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          </div>
         </div>
       </div>
     </aside>
