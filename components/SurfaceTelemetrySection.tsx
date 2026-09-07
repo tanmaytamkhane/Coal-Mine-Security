@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Compass,
   Activity,
@@ -8,12 +8,24 @@ import {
   TrendingUp,
   Radio,
   BatteryCharging,
-  Signal
+  Signal,
+  LineChart as ChartIcon
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ReferenceLine,
+  CartesianGrid,
+} from 'recharts';
 import { useDashboardStore } from '../lib/store';
 import { SURFACE_THRESHOLDS } from '../lib/constants';
 
 export function SurfaceTelemetrySection() {
+  const [chartMode, setChartMode] = useState<'subsidence' | 'slope'>('subsidence');
   const { telemetryHistory, sensors } = useDashboardStore();
 
   const latestPoint = telemetryHistory[telemetryHistory.length - 1] || {
@@ -311,6 +323,213 @@ export function SurfaceTelemetrySection() {
               MPU-6050 Accel RMS
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Dedicated Surface Telemetry Dynamic Graph */}
+      <div className="bg-white dark:bg-[#111726] rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <ChartIcon className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                Surface Deformation & Ground Kinematics Graph
+              </h3>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
+                Live 1.5s Stream
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Continuous displacement curves plotted against DGMS CMR-2017 subsidence limits
+            </p>
+          </div>
+
+          {/* Graph Toggle Buttons */}
+          <div className="flex items-center gap-1.5 p-1 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 self-start sm:self-auto">
+            <button
+              onClick={() => setChartMode('subsidence')}
+              className={`px-3 py-1 rounded-md text-xs font-mono font-semibold transition-all ${
+                chartMode === 'subsidence'
+                  ? 'bg-sky-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Linear Pot: Subsidence & Fissure (mm)
+            </button>
+            <button
+              onClick={() => setChartMode('slope')}
+              className={`px-3 py-1 rounded-md text-xs font-mono font-semibold transition-all ${
+                chartMode === 'slope'
+                  ? 'bg-sky-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              MPU-6050: Slope Tilt & PPV (°)
+            </button>
+          </div>
+        </div>
+
+        {/* Chart Legend Summary */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-2 border-b border-slate-100 dark:border-slate-800/80 text-xs font-mono">
+          <div className="flex items-center gap-4">
+            {chartMode === 'subsidence' ? (
+              <>
+                <div className="flex items-center gap-1.5 text-sky-600 dark:text-sky-400">
+                  <span className="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block" />
+                  <span>Subsidence (POT-01): {surfDisp.toFixed(2)} mm</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />
+                  <span>Crack Opening (POT-02): {surfCrack.toFixed(2)} mm</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400">
+                  <span className="w-2.5 h-2.5 rounded-full bg-violet-500 inline-block" />
+                  <span>Slope Tilt (MPU-01): {surfTilt.toFixed(2)}°</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
+                  <span>Vibration PPV (MPU-02): {surfVib.toFixed(2)} mm/s</span>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 text-[11px] text-slate-500">
+            {chartMode === 'subsidence' ? (
+              <>
+                <span className="text-amber-500">Warning: 10.0 mm</span>
+                <span className="text-red-500">Breach: 25.0 mm</span>
+              </>
+            ) : (
+              <>
+                <span className="text-amber-500">Safe Tilt: 0.80°</span>
+                <span className="text-red-500">Critical: 1.80°</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Recharts Canvas */}
+        <div className="h-[240px] w-full pt-1">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={telemetryHistory} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+              <defs>
+                <linearGradient id="surfDispGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#0284c7" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#0284c7" stopOpacity={0.02} />
+                </linearGradient>
+                <linearGradient id="surfCrackGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.02} />
+                </linearGradient>
+                <linearGradient id="surfTiltGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.02} />
+                </linearGradient>
+                <linearGradient id="surfVibGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+              <XAxis
+                dataKey="timeLabel"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: '#94a3b8', fontSize: 10 }}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: '#94a3b8', fontSize: 10 }}
+              />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const d = payload[0].payload;
+                    return (
+                      <div className="bg-white dark:bg-slate-900 p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 text-xs font-mono">
+                        <p className="text-slate-400 text-[10px] mb-1">{d.timeLabel}</p>
+                        {chartMode === 'subsidence' ? (
+                          <>
+                            <div className="text-sky-600 font-bold">
+                              Subsidence: {d.surfaceDisplacementMm?.toFixed(2) ?? '0.00'} mm
+                            </div>
+                            <div className="text-amber-500 font-bold">
+                              Crack: {d.surfaceCrackWidthMm?.toFixed(2) ?? '0.00'} mm
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-violet-500 font-bold">
+                              Slope Tilt: {d.surfaceTiltDeg?.toFixed(2) ?? '0.00'}°
+                            </div>
+                            <div className="text-rose-500 font-bold">
+                              Vibration: {d.surfaceVibrationMms?.toFixed(2) ?? '0.00'} mm/s
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+
+              {chartMode === 'subsidence' ? (
+                <>
+                  <ReferenceLine y={10.0} stroke="#f59e0b" strokeDasharray="3 3" />
+                  <ReferenceLine y={25.0} stroke="#ef4444" strokeDasharray="4 4" />
+                  <Area
+                    type="monotone"
+                    dataKey="surfaceDisplacementMm"
+                    stroke="#0284c7"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#surfDispGrad)"
+                    isAnimationActive={false}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="surfaceCrackWidthMm"
+                    stroke="#f59e0b"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#surfCrackGrad)"
+                    isAnimationActive={false}
+                  />
+                </>
+              ) : (
+                <>
+                  <ReferenceLine y={0.80} stroke="#f59e0b" strokeDasharray="3 3" />
+                  <ReferenceLine y={1.80} stroke="#ef4444" strokeDasharray="4 4" />
+                  <Area
+                    type="monotone"
+                    dataKey="surfaceTiltDeg"
+                    stroke="#8b5cf6"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#surfTiltGrad)"
+                    isAnimationActive={false}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="surfaceVibrationMms"
+                    stroke="#f43f5e"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#surfVibGrad)"
+                    isAnimationActive={false}
+                  />
+                </>
+              )}
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

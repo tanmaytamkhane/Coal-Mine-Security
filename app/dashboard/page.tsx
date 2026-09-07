@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useSensorSimulator } from '../../lib/sensorSimulator';
 import { useDashboardStore } from '../../lib/store';
 import { COALFIELD_ZONES } from '../../lib/constants';
@@ -17,6 +17,7 @@ export default function DashboardPage() {
   // Initialize in-browser realistic sensor simulation
   useSensorSimulator();
 
+  const [activeTelemetryTab, setActiveTelemetryTab] = useState<'all' | 'surface' | 'underground'>('all');
   const { selectedCoalfield } = useDashboardStore();
   const currentZone = COALFIELD_ZONES.find((z) => z.id === selectedCoalfield) || COALFIELD_ZONES[0];
 
@@ -52,6 +53,65 @@ export default function DashboardPage() {
             <Cpu className="w-3.5 h-3.5 text-[#e64a19]" />
             <span>XGBoost 3.2 (39 Features)</span>
           </div>
+        </div>
+      </div>
+
+      {/* Quick Stratum Switcher Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-2 rounded-xl bg-slate-100/90 dark:bg-[#0c121e] border border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+          {/* Surface Tab Button */}
+          <button
+            onClick={() => setActiveTelemetryTab('surface')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTelemetryTab === 'surface'
+                ? 'bg-sky-600 text-white shadow-md'
+                : 'bg-white dark:bg-[#111726] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-sky-400" />
+            <span>Above the Surface (SF-01/SF-02)</span>
+            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+              activeTelemetryTab === 'surface' ? 'bg-sky-700/60 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+            }`}>
+              4 Sensors
+            </span>
+          </button>
+
+          {/* Underground Tab Button */}
+          <button
+            onClick={() => setActiveTelemetryTab('underground')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTelemetryTab === 'underground'
+                ? 'bg-[#e64a19] text-white shadow-md'
+                : 'bg-white dark:bg-[#111726] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-300" />
+            <span>Underground Strata (UG-01/UG-02)</span>
+            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+              activeTelemetryTab === 'underground' ? 'bg-orange-900/60 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+            }`}>
+              6 Sensors
+            </span>
+          </button>
+
+          {/* Combined View Button */}
+          <button
+            onClick={() => setActiveTelemetryTab('all')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+              activeTelemetryTab === 'all'
+                ? 'bg-slate-800 dark:bg-slate-700 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-900'
+            }`}
+          >
+            <span>Combined View (All)</span>
+          </button>
+        </div>
+
+        <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 hidden md:block">
+          {activeTelemetryTab === 'surface' && 'Focused on Surface Subsidence (Linear Pot) & Surface Slope (MPU-6050)'}
+          {activeTelemetryTab === 'underground' && 'Focused on Subterranean Pillar Microstrain (BF350), Roof Tilt & MQ-4'}
+          {activeTelemetryTab === 'all' && 'Displaying Two-Tier Full Colliery Telemetry'}
         </div>
       </div>
 
@@ -137,16 +197,20 @@ export default function DashboardPage() {
       {/* ========================================================================= */}
       {/* 1. ABOVE THE SURFACE SENSORS SECTION (SHOWN FIRST ON DASHBOARD)           */}
       {/* ========================================================================= */}
-      <div id="surface-section">
-        <SurfaceTelemetrySection />
-      </div>
+      {(activeTelemetryTab === 'all' || activeTelemetryTab === 'surface') && (
+        <div id="surface-section">
+          <SurfaceTelemetrySection />
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 2. UNDERGROUND SENSORS SECTION (SHOWN WHEN USER SCROLLS DOWN)              */}
       {/* ========================================================================= */}
-      <div id="underground-section">
-        <UndergroundTelemetrySection />
-      </div>
+      {(activeTelemetryTab === 'all' || activeTelemetryTab === 'underground') && (
+        <div id="underground-section">
+          <UndergroundTelemetrySection />
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 3. MULTI-CHANNEL TELEMETRY CHART & ROOM-AND-PILLAR GRID                   */}

@@ -1223,3 +1223,29 @@ proven; the firmware is the untested half. Before the demo, also resolve the
 
 **Verification**: `npm run build` exit 0, all 10/10 static pages compiled cleanly. Verified live on `http://localhost:3005/dashboard`.
 
+### 2026-09-07 — Quick Stratum Switcher Buttons & Dedicated Telemetry Graphs
+
+**User Request**:
+- Add two buttons on top of control console (one for underground and one for above surface) to switch between them easily.
+- Add dedicated real-time dynamic graphs for both surface and underground metrics.
+
+**What was built:**
+1. **`app/dashboard/page.tsx`**:
+   - Added interactive `activeTelemetryTab` state (`'all' | 'surface' | 'underground'`).
+   - Built top console stratum switcher bar:
+     - `[Above the Surface (SF-01/SF-02)]` (Sky blue active badge, 4 sensors)
+     - `[Underground Strata (UG-01/UG-02)]` (Safety orange active badge, 6 sensors)
+     - `[Combined View (All)]` (Full two-tier overview)
+   - Real-time tab filtering: selectively isolates the Surface or Underground section, or displays both in sequence.
+2. **`components/SurfaceTelemetrySection.tsx`**:
+   - Added dedicated **Surface Deformation & Ground Kinematics Graph**:
+     - Toggle between "Linear Pot: Subsidence & Fissure (mm)" and "MPU-6050: Slope Tilt & PPV (°)".
+     - Real-time Recharts AreaChart with gradient fills and DGMS warning ($10\text{ mm}$) / breach ($25\text{ mm}$) reference lines.
+3. **`components/UndergroundTelemetrySection.tsx`**:
+   - Added dedicated **Subterranean Seam XII Strata Telemetry Graph**:
+     - Toggle between "BF350 Strain & HX711 (µε)", "MPU-6050: Roof Tilt & Vib (°)", and "MQ-4 Methane (% LEL)".
+     - Real-time Recharts AreaChart with DGMS Level-1 ($350\,\mu\epsilon$), Yield ($600\,\mu\epsilon$), and CMR Reg 169 Trip ($1.25\%\text{ LEL}$) reference lines.
+
+**Verification**: `npm run build` exit 0, all 10/10 static pages compiled. Live test on `http://localhost:3005/dashboard` confirmed buttons and both graphs render cleanly.
+
+

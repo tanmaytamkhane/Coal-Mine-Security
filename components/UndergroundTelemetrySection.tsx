@@ -1,16 +1,29 @@
 'use client';
 
+import React, { useState } from 'react';
 import {
   Activity,
   Compass,
   Flame,
   TrendingUp,
-  Zap
+  Zap,
+  LineChart as ChartIcon
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ReferenceLine,
+  CartesianGrid,
+} from 'recharts';
 import { useDashboardStore } from '../lib/store';
 import { UNDERGROUND_THRESHOLDS } from '../lib/constants';
 
 export function UndergroundTelemetrySection() {
+  const [ugChartMode, setUgChartMode] = useState<'strain' | 'tilt_vib' | 'methane'>('strain');
   const { telemetryHistory, sensors } = useDashboardStore();
 
   const latestPoint = telemetryHistory[telemetryHistory.length - 1] || {
@@ -373,6 +386,233 @@ export function UndergroundTelemetrySection() {
               MQ-4 Catalytic Semiconductor
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Dedicated Underground Strata Real-Time Graph */}
+      <div className="bg-white dark:bg-[#111726] rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <ChartIcon className="w-4 h-4 text-[#e64a19]" />
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                Subterranean Seam XII Strata Telemetry Graph
+              </h3>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
+                Live 1.5s Stream
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Continuous pillar microstrain, roof strata tilt, vibration, and atmospheric methane monitoring
+            </p>
+          </div>
+
+          {/* Graph Toggle Tabs */}
+          <div className="flex items-center gap-1.5 p-1 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 self-start sm:self-auto flex-wrap">
+            <button
+              onClick={() => setUgChartMode('strain')}
+              className={`px-3 py-1 rounded-md text-xs font-mono font-semibold transition-all ${
+                ugChartMode === 'strain'
+                  ? 'bg-[#e64a19] text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              BF350 Strain & HX711 (µε)
+            </button>
+            <button
+              onClick={() => setUgChartMode('tilt_vib')}
+              className={`px-3 py-1 rounded-md text-xs font-mono font-semibold transition-all ${
+                ugChartMode === 'tilt_vib'
+                  ? 'bg-[#e64a19] text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              MPU-6050: Roof Tilt & Vib (°)
+            </button>
+            <button
+              onClick={() => setUgChartMode('methane')}
+              className={`px-3 py-1 rounded-md text-xs font-mono font-semibold transition-all ${
+                ugChartMode === 'methane'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              MQ-4 Methane (% LEL)
+            </button>
+          </div>
+        </div>
+
+        {/* Chart Legend Summary */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-2 border-b border-slate-100 dark:border-slate-800/80 text-xs font-mono">
+          <div className="flex items-center gap-4">
+            {ugChartMode === 'strain' ? (
+              <div className="flex items-center gap-1.5 text-[#e64a19]">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#e64a19] inline-block" />
+                <span>Pillar Strain (BF350): {strain.toFixed(1)} µε | Stress: {stressMpa} MPa</span>
+              </div>
+            ) : ugChartMode === 'tilt_vib' ? (
+              <>
+                <div className="flex items-center gap-1.5 text-amber-500">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />
+                  <span>Roof Delamination: {ugTilt.toFixed(2)}°</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-red-500">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />
+                  <span>Seismic PPV: {ugVib.toFixed(2)} mm/s</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-1.5 text-emerald-500">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+                <span>Methane Gas (MQ-4): {methane.toFixed(2)}% LEL (~{Math.round(methane * 500)} ppm)</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 text-[11px] text-slate-500">
+            {ugChartMode === 'strain' ? (
+              <>
+                <span className="text-amber-500">Level-1 Trigger: 350 µε</span>
+                <span className="text-red-500">Yield Cap: 600 µε</span>
+              </>
+            ) : ugChartMode === 'tilt_vib' ? (
+              <>
+                <span className="text-amber-500">Safe Tilt: 1.50°</span>
+                <span className="text-red-500">Failure Trigger: 3.00°</span>
+                <span className="text-red-400">Blast Cap: 5.0 mm/s</span>
+              </>
+            ) : (
+              <>
+                <span className="text-amber-500">Warning: 0.80% LEL</span>
+                <span className="text-red-500">Reg 169 Trip: 1.25% LEL</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Recharts Canvas */}
+        <div className="h-[240px] w-full pt-1">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={telemetryHistory} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+              <defs>
+                <linearGradient id="ugStrainGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#e64a19" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#e64a19" stopOpacity={0.02} />
+                </linearGradient>
+                <linearGradient id="ugTiltGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.02} />
+                </linearGradient>
+                <linearGradient id="ugVibGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0.02} />
+                </linearGradient>
+                <linearGradient id="ugMethaneGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+              <XAxis
+                dataKey="timeLabel"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: '#94a3b8', fontSize: 10 }}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: '#94a3b8', fontSize: 10 }}
+              />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const d = payload[0].payload;
+                    return (
+                      <div className="bg-white dark:bg-slate-900 p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 text-xs font-mono">
+                        <p className="text-slate-400 text-[10px] mb-1">{d.timeLabel}</p>
+                        {ugChartMode === 'strain' ? (
+                          <div className="text-[#e64a19] font-bold">
+                            BF350 Strain: {d.undergroundStrainMicrostrain?.toFixed(1) ?? '0.0'} µε
+                          </div>
+                        ) : ugChartMode === 'tilt_vib' ? (
+                          <>
+                            <div className="text-amber-500 font-bold">
+                              Roof Tilt: {d.undergroundTiltDeg?.toFixed(2) ?? '0.00'}°
+                            </div>
+                            <div className="text-red-500 font-bold">
+                              Seismic PPV: {d.undergroundVibrationMms?.toFixed(2) ?? '0.00'} mm/s
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-emerald-500 font-bold">
+                            Methane: {d.methanePctLel?.toFixed(2) ?? '0.00'}% LEL (~{Math.round((d.methanePctLel ?? 0) * 500)} ppm)
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+
+              {ugChartMode === 'strain' ? (
+                <>
+                  <ReferenceLine y={350.0} stroke="#f59e0b" strokeDasharray="3 3" />
+                  <ReferenceLine y={600.0} stroke="#ef4444" strokeDasharray="4 4" />
+                  <Area
+                    type="monotone"
+                    dataKey="undergroundStrainMicrostrain"
+                    stroke="#e64a19"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#ugStrainGrad)"
+                    isAnimationActive={false}
+                  />
+                </>
+              ) : ugChartMode === 'tilt_vib' ? (
+                <>
+                  <ReferenceLine y={1.50} stroke="#f59e0b" strokeDasharray="3 3" />
+                  <ReferenceLine y={3.00} stroke="#ef4444" strokeDasharray="4 4" />
+                  <ReferenceLine y={5.00} stroke="#dc2626" strokeDasharray="2 2" />
+                  <Area
+                    type="monotone"
+                    dataKey="undergroundTiltDeg"
+                    stroke="#f59e0b"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#ugTiltGrad)"
+                    isAnimationActive={false}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="undergroundVibrationMms"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#ugVibGrad)"
+                    isAnimationActive={false}
+                  />
+                </>
+              ) : (
+                <>
+                  <ReferenceLine y={0.80} stroke="#f59e0b" strokeDasharray="3 3" />
+                  <ReferenceLine y={1.25} stroke="#ef4444" strokeDasharray="4 4" />
+                  <Area
+                    type="monotone"
+                    dataKey="methanePctLel"
+                    stroke="#10b981"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#ugMethaneGrad)"
+                    isAnimationActive={false}
+                  />
+                </>
+              )}
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
