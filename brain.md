@@ -1248,4 +1248,34 @@ proven; the firmware is the untested half. Before the demo, also resolve the
 
 **Verification**: `npm run build` exit 0, all 10/10 static pages compiled. Live test on `http://localhost:3005/dashboard` confirmed buttons and both graphs render cleanly.
 
+### 2026-09-07 — Shift Sensor Readings Right to the Top & Complete Text Minimization
+
+**User Request**:
+- "shift readings upside wtf is that and please keep content very less u have just given so much text there whyyy keep less texts and just keep imp info dont add anything stuff please"
+- Remove the wordy "TWO-TIER STRATA CONTROL & TELEMETRY TOPOLOGY" block shown in the uploaded screenshot (`media_1788766347858.png`).
+- Shift the actual sensor reading meters directly to the top of the dashboard.
+- Drastically minimize text across the console: remove explanatory paragraphs, verbose subtitles, subtext clutter, and filler; show only essential data (sensor names, large numbers, units, minimal status badges, and compact gauges).
+
+**What was built:**
+1. **`app/dashboard/page.tsx`**:
+   - **Deleted** the entire verbose `TWO-TIER STRATA CONTROL & TELEMETRY TOPOLOGY` card completely.
+   - Streamlined top header: minimal title `Strata Control Console` + `LIVE TELEMETRY` dot + Colliery Panel tag.
+   - Compact stratum switcher bar (`[Above Surface (4)]`, `[Underground (4)]`, `[Combined]`).
+   - Positioned the actual sensor readings (`SurfaceMetricCards` or `UndergroundMetricCards`) in `lg:col-span-3` directly alongside `RiskGaugeCard` in `lg:col-span-1` on the **VERY FIRST ROW** above the fold. Zero scrolling needed.
+2. **`components/SurfaceTelemetrySection.tsx`**:
+   - Stripped all descriptive paragraphs and wordy subtext.
+   - Refactored into clean modular components:
+     - `SurfaceMetricCards`: 4 high-density metric cards (Ground Subsidence [Linear Pot 50mm], Tension Fissure [Extensometer 100mm], Slope Tilt [MPU-6050], Surface Vibration [MPU-6050 PPV]) with big numbers, status pills, and minimal visual meters.
+     - `SurfaceGraphCard`: Minimal live stream area chart with quick toggle buttons.
+     - `SurfaceFleetTable`: Clean tabular summary with zero filler text.
+3. **`components/UndergroundTelemetrySection.tsx`**:
+   - Stripped all explanatory essays, verbose calibration explanations, and filler boxes.
+   - Refactored into modular components:
+     - `UndergroundMetricCards`: 4 high-density metric cards (Pillar Microstrain [BF350+HX711], Roof Strata Tilt [MPU-6050], Strata Vibration [MPU-6050], Methane Gas [MQ-4]) with big bold values, clean status badges, and minimal visual gauges.
+     - `UndergroundGraphCard`: Minimal real-time area chart with 3 channel toggles.
+     - `UndergroundFleetTable`: Clean tabular summary.
+
+**Verification**: `npm run build` compiled 10/10 routes with zero errors. Next.js production server running on port 3005. Verified on `http://localhost:3005/dashboard`.
+
+
 
