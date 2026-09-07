@@ -121,6 +121,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     set({
       isSubsidenceSimActive: true,
       simProgress: 0.05,
+      selectedCoalfield: 'jharia-block-4', // Main focus: drill executes for Jharia
     });
   },
 

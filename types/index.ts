@@ -91,4 +91,7 @@ export interface CoalfieldZone {
   activeNodes: number;
   currentRiskScore: number;
   insarDeformationRateMmYr: number;
+  isPrimaryFocus?: boolean;
+  productionCapacityMtpa?: number;
+  depthMeters?: number;
 }
