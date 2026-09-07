@@ -22,7 +22,12 @@ interface DashboardState {
   mlModelEngine: string;
   mlFeatureContributions: Record<string, string>;
 
+  // Sidebar Navigation Drawer State
+  isSidebarOpen: boolean;
+
   // Actions
+  toggleSidebar: () => void;
+  setSidebarOpen: (open: boolean) => void;
   toggleDarkMode: () => void;
   setSelectedCoalfield: (id: string) => void;
   triggerSubsidenceEvent: () => void;
@@ -100,6 +105,10 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     'Crack Width Std (6h)': '16.4%',
     'Seismic Vibration RMS': '5.5%',
   },
+
+  isSidebarOpen: true,
+  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+  setSidebarOpen: (open: boolean) => set({ isSidebarOpen: open }),
 
   toggleDarkMode: () => set((state) => {
     const next = !state.isDarkMode;

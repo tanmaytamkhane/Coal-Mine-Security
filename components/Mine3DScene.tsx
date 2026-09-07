@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useDashboardStore } from '../lib/store';
-import { Rotate3d, Layers, Camera, AlertOctagon, Info, X, Play, RotateCcw, Radio } from 'lucide-react';
+import { Rotate3d, Layers, Camera, AlertOctagon, Info, X, Play, RotateCcw, Radio, Maximize2, Minimize2 } from 'lucide-react';
 
 export interface StrataLayerMetadata {
   id: string;
@@ -526,8 +526,72 @@ export function Mine3DScene() {
   selectPillarRef.current = selectPillar;
 
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const surfaceGroupRef = useRef<THREE.Group | null>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    const el = viewportRef.current;
+    if (!el) return;
+
+    if (!document.fullscreenElement) {
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {
+          setIsFullscreen(prev => !prev);
+        });
+      } else {
+        setIsFullscreen(prev => !prev);
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {
+          setIsFullscreen(false);
+        });
+      } else {
+        setIsFullscreen(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      const isFs = !!document.fullscreenElement;
+      setIsFullscreen(isFs);
+      setTimeout(() => {
+        if (containerRef.current && cameraRef.current && rendererRef.current) {
+          const w = containerRef.current.clientWidth;
+          const h = containerRef.current.clientHeight;
+          if (w > 0 && h > 0) {
+            cameraRef.current.aspect = w / h;
+            cameraRef.current.updateProjectionMatrix();
+            rendererRef.current.setSize(w, h);
+          }
+        }
+      }, 50);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        } else {
+          setIsFullscreen(false);
+        }
+      }
+    };
+
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', onFullscreenChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const selectedPillar = pillars.find(p => p.id === selectedPillarId) || pillars[5];
 
@@ -593,6 +657,23 @@ export function Mine3DScene() {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
     container.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+
+    const handleResize = () => {
+      if (!container || !camera || !renderer) return;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (w === 0 || h === 0) return;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    };
+
+    window.addEventListener('resize', handleResize);
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    resizeObserver.observe(container);
 
     // 4. Orbit Controls
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -1421,15 +1502,6 @@ export function Mine3DScene() {
     renderer.domElement.addEventListener('pointerup', onPointerUp);
     renderer.domElement.addEventListener('pointerleave', onPointerLeave);
 
-    // 16. Window Resize
-    const handleResize = () => {
-      if (!container) return;
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    };
-    window.addEventListener('resize', handleResize);
-
     // 17. Animation Loop
     let animationFrameId: number;
     const clock = new THREE.Clock();
@@ -1567,6 +1639,7 @@ export function Mine3DScene() {
 
     return () => {
       cancelAnimationFrame(animationFrameId);
+      resizeObserver.disconnect();
       window.removeEventListener('resize', handleResize);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       renderer.domElement.removeEventListener('pointermove', onPointerMove);
@@ -1616,7 +1689,14 @@ export function Mine3DScene() {
   return (
     <div className="space-y-4">
       {/* 3D Scene Viewport */}
-      <div className="relative w-full h-[580px] lg:h-[620px] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl bg-slate-950">
+      <div
+        ref={viewportRef}
+        className={`transition-all duration-300 ${
+          isFullscreen
+            ? 'fixed inset-0 z-[9999] w-screen h-screen rounded-none bg-slate-950 p-0 m-0 overflow-hidden border-0 shadow-none'
+            : 'relative w-full h-[580px] lg:h-[620px] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl bg-slate-950'
+        }`}
+      >
         <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
 
         {/* Top Control Bar */}
@@ -1658,8 +1738,8 @@ export function Mine3DScene() {
             </button>
           </div>
 
-          {/* Layer, Drill & Auto-Rotate Toggles */}
-          <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Layer, Drill, Auto-Rotate & Fullscreen Toggles */}
+          <div className="flex items-center gap-2 pointer-events-auto flex-wrap">
             {/* Subsidence Emergency Drill Trigger Button */}
             {isSubsidenceSimActive ? (
               <button
@@ -1714,6 +1794,30 @@ export function Mine3DScene() {
             >
               <Rotate3d className="w-3.5 h-3.5" />
               <span>360° Orbit</span>
+            </button>
+
+            {/* Fullscreen Toggle Button */}
+            <button
+              onClick={toggleFullscreen}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold backdrop-blur-md border transition-all flex items-center gap-1.5 shadow-lg ${
+                isFullscreen
+                  ? 'bg-[#e64a19] text-white border-[#e64a19] shadow-orange-600/30 ring-2 ring-[#e64a19]/40'
+                  : 'bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-[#e64a19]'
+              }`}
+              title={isFullscreen ? 'Exit Full Screen (Esc)' : 'Enter Full Screen'}
+              aria-label={isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
+            >
+              {isFullscreen ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5" />
+                  <span>Exit Fullscreen</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  <span>Full Screen</span>
+                </>
+              )}
             </button>
           </div>
         </div>

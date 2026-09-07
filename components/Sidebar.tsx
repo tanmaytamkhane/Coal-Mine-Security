@@ -11,14 +11,15 @@ import {
   LineChart,
   BellRing,
   ShieldCheck,
-  Building2
+  Building2,
+  ChevronLeft,
 } from 'lucide-react';
 import { useDashboardStore } from '../lib/store';
 import { COALFIELD_ZONES } from '../lib/constants';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { selectedCoalfield, setSelectedCoalfield, alerts } = useDashboardStore();
+  const { selectedCoalfield, setSelectedCoalfield, alerts, isSidebarOpen, toggleSidebar } = useDashboardStore();
   const unreadAlerts = alerts.filter(a => !a.acknowledged && a.severity !== 'info').length;
 
   const primaryNav = [
@@ -35,24 +36,37 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-slate-50/70 dark:bg-[#0c1017] border-r border-slate-200 dark:border-slate-800/90 flex flex-col justify-between shrink-0 transition-colors duration-150 min-h-screen select-none font-sans">
-      <div>
-        {/* Brand Header */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f141f]">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-lg bg-[#1b2537] dark:bg-[#1a2333] border border-slate-700 flex items-center justify-center text-amber-400 shrink-0">
-              <Building2 className="w-5 h-5" />
-            </div>
-            <div className="overflow-hidden">
-              <div className="font-bold text-slate-900 dark:text-white text-sm tracking-tight flex items-center gap-1.5">
-                DGMS • NMS-SEWS
+    <aside
+      className={`transition-all duration-300 ease-in-out shrink-0 overflow-hidden flex flex-col justify-between border-r border-slate-200 dark:border-slate-800/90 bg-slate-50/70 dark:bg-[#0c1017] min-h-screen select-none font-sans z-20 ${
+        isSidebarOpen ? 'w-64 opacity-100' : 'w-0 opacity-0 border-r-0 pointer-events-none'
+      }`}
+    >
+      <div className="w-64 min-w-[16rem] flex flex-col justify-between h-full">
+        <div>
+          {/* Brand Header */}
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f141f] flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3 group overflow-hidden">
+              <div className="w-9 h-9 rounded-lg bg-[#1b2537] dark:bg-[#1a2333] border border-slate-700 flex items-center justify-center text-amber-400 shrink-0">
+                <Building2 className="w-5 h-5" />
               </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                Ministry of Coal | SIH26025
-              </p>
-            </div>
-          </Link>
-        </div>
+              <div className="overflow-hidden">
+                <div className="font-bold text-slate-900 dark:text-white text-sm tracking-tight flex items-center gap-1.5">
+                  DGMS • NMS-SEWS
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                  Ministry of Coal | SIH26025
+                </p>
+              </div>
+            </Link>
+            <button
+              onClick={toggleSidebar}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+              title="Close Navigation Bar"
+              aria-label="Close Navigation Bar"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </div>
 
         {/* Section 1: Statutory Monitoring */}
         <div className="px-3 pt-4">
@@ -173,6 +187,7 @@ export function Sidebar() {
           </div>
         </div>
       </div>
-    </aside>
+    </div>
+  </aside>
   );
 }
