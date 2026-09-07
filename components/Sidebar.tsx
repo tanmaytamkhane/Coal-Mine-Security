@@ -1,9 +1,10 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  Home,
   LayoutDashboard,
   Box,
   MapPin,
@@ -21,7 +22,8 @@ export function Sidebar() {
   const unreadAlerts = alerts.filter(a => !a.acknowledged && a.severity !== 'info').length;
 
   const navItems = [
-    { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { label: 'Landing Page', href: '/', icon: Home },
+    { label: 'Live Console', href: '/dashboard', icon: LayoutDashboard },
     { label: '3D Mine Model', href: '/model', icon: Box, highlight: true },
     { label: 'Coalfield Map', href: '/map', icon: MapPin },
     { label: 'Telemetry Trends', href: '/trends', icon: LineChart },
@@ -34,8 +36,8 @@ export function Sidebar() {
       <div>
         {/* Brand Header */}
         <div className="p-5 border-b border-gray-100 dark:border-slate-800/60 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-safety-500 to-orange-600 flex items-center justify-center text-white shadow-md shadow-safety-500/20">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-safety-500 to-orange-600 flex items-center justify-center text-white shadow-md shadow-safety-500/20 group-hover:scale-105 transition-transform">
               <HardHat className="w-5 h-5" />
             </div>
             <div>
@@ -47,7 +49,7 @@ export function Sidebar() {
               </div>
               <p className="text-[11px] text-gray-500 dark:text-slate-400">DGMS Safety Portal</p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Main Navigation */}
