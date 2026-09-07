@@ -1317,10 +1317,28 @@ proven; the firmware is the untested half. Before the demo, also resolve the
    - Updated `SurfaceGraphCard` area chart to track Ground Subsidence (Linear Pot 50mm) without Tension Fissure traces.
 2. **`app/dashboard/page.tsx`**:
    - Updated the `Above Surface` tab button badge count from `4` to `3`.
-3. **`lib/constants.ts`**:
-   - Removed `NODE-SF-POT-02` (Tension Fissure Potentiometer) from `INITIAL_SENSOR_NODES`.
+**Verification**: `npm run build` compiled 10/10 routes with zero errors. Next.js server running on port 3005. Verified on `http://localhost:3005/dashboard`.
+
+### 2026-09-07 — Standardization of Surface & Underground Fleet Telemetry Tables
+
+**User Request**:
+- "These two tables are having different types of inforation while serving the same purpose, this looks inconsistent. Explain me the existence of these tables and how it helps in better monitoring of the system"
+- User approved standardizing both tables into a unified schema.
+
+**What was built:**
+1. **Unified 6-Column Standard Schema Across Both Fleet Tables**:
+   - `Sensor Node`: Primary sensor name + Node ID badge.
+   - `Hardware Model`: Exact hardware device (Linear Pot 50mm, MPU-6050, BF350+HX711, MQ-4).
+   - `Deployment Location`: Precise station / pillar rib / gallery anchor with datum elevation (`Datum RL 0.0m` vs `RL -248.0m`).
+   - `Telemetry Health`: Real-time RF signal (`dBm`) with `Signal` icon + Battery percentage (`%`) with `BatteryCharging` icon.
+   - `Live Reading`: Physical measurement value + engineering unit in bold font-mono aligned right.
+   - `DGMS Status`: Color-coded statutory status badge (`NORMAL` / `ALERT` / `CRITICAL`).
+2. **Updated Files**:
+   - **`components/SurfaceTelemetrySection.tsx`**: Updated `SurfaceFleetTable` to the 6-column schema with deployment location and datum markers.
+   - **`components/UndergroundTelemetrySection.tsx`**: Updated `UndergroundFleetTable` to the 6-column schema with telemetry RF & battery health indicators.
 
 **Verification**: `npm run build` compiled 10/10 routes with zero errors. Next.js server running on port 3005. Verified on `http://localhost:3005/dashboard`.
+
 
 
 

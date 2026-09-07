@@ -6,6 +6,8 @@ import {
   Compass,
   Flame,
   TrendingUp,
+  Signal,
+  BatteryCharging,
   LineChart as ChartIcon
 } from 'lucide-react';
 import {
@@ -525,12 +527,13 @@ export function UndergroundFleetTable() {
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs font-mono">
           <thead>
-            <tr className="text-slate-500 dark:text-slate-400 pb-1 text-[11px]">
-              <th className="py-1.5">Sensor</th>
-              <th className="py-1.5">Hardware</th>
-              <th className="py-1.5">Location</th>
-              <th className="py-1.5 text-right">Reading</th>
-              <th className="py-1.5 text-right">Status</th>
+            <tr className="text-slate-500 dark:text-slate-400 pb-1 text-[11px] border-b border-slate-200 dark:border-slate-800">
+              <th className="py-2">Sensor Node</th>
+              <th className="py-2">Hardware Model</th>
+              <th className="py-2">Deployment Location</th>
+              <th className="py-2">Telemetry Health</th>
+              <th className="py-2 text-right">Live Reading</th>
+              <th className="py-2 text-right">DGMS Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -538,22 +541,35 @@ export function UndergroundFleetTable() {
               const isCrit = sensor.status === 'critical';
               const isWarn = sensor.status === 'warning';
               return (
-                <tr key={sensor.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-900/40">
-                  <td className="py-2">
+                <tr key={sensor.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-900/40 transition-colors">
+                  <td className="py-2.5">
                     <span className="font-bold text-slate-900 dark:text-white block">{sensor.name}</span>
                     <span className="text-[10px] text-slate-400">{sensor.id}</span>
                   </td>
-                  <td className="py-2 text-slate-600 dark:text-slate-300">
+                  <td className="py-2.5 text-slate-600 dark:text-slate-300">
                     {sensor.hardwareModel || 'BF350 / MPU-6050 / MQ-4'}
                   </td>
-                  <td className="py-2 text-slate-500 dark:text-slate-400">
-                    {sensor.location}
+                  <td className="py-2.5 text-slate-600 dark:text-slate-300">
+                    <span className="block">{sensor.location}</span>
+                    <span className="text-[10px] text-slate-400">RL -{sensor.depthMeters || 248}.0m</span>
                   </td>
-                  <td className="py-2 text-right font-bold text-slate-900 dark:text-white">
+                  <td className="py-2.5 text-slate-600 dark:text-slate-400">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1">
+                        <Signal className="w-3.5 h-3.5 text-emerald-500" />
+                        {sensor.signalDbm || -58} dBm
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <BatteryCharging className="w-3.5 h-3.5 text-emerald-500" />
+                        {sensor.batteryPercent || 94}%
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-2.5 text-right font-bold text-slate-900 dark:text-white">
                     {sensor.currentValue.toFixed(2)} {sensor.unit}
                   </td>
-                  <td className="py-2 text-right">
-                    <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                  <td className="py-2.5 text-right">
+                    <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded ${
                       isCrit
                         ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400'
                         : isWarn
