@@ -1342,7 +1342,7 @@ export function Mine3DScene() {
   return (
     <div className="space-y-4">
       {/* 3D Scene Viewport */}
-      <div className="relative w-full h-[660px] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl bg-slate-950">
+      <div className="relative w-full h-[580px] lg:h-[620px] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl bg-slate-950">
         <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
 
         {/* Top Control Bar */}
@@ -1397,6 +1397,17 @@ export function Mine3DScene() {
               <Layers className="w-3.5 h-3.5" />
               <span>Surface & Strata Overburden ({showOverburden ? 'VISIBLE' : 'HIDDEN'})</span>
             </button>
+
+            {/* Checkbox option: Transparent Upper Strata Toggle */}
+            <label className="px-3 py-1.5 rounded-xl text-xs font-semibold backdrop-blur-md border transition-all flex items-center gap-2 shadow-lg bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-[#e64a19] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isTransparentStrata}
+                onChange={(e) => toggleTransparentStrata(e.target.checked)}
+                className="w-3.5 h-3.5 rounded border-slate-400 dark:border-slate-600 text-[#e64a19] focus:ring-[#e64a19] cursor-pointer accent-[#e64a19]"
+              />
+              <span>Transparent Upper Strata</span>
+            </label>
 
             <button
               onClick={() => setAutoRotate(!autoRotate)}
@@ -1639,7 +1650,7 @@ export function Mine3DScene() {
         </div>
 
         {/* Bottom Right: Color Legend, Subsidence Indicator & Translucent Strata Toggle */}
-        <div className="absolute bottom-4 right-4 p-3 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 shadow-lg text-xs space-y-1.5 pointer-events-auto">
+        <div className="absolute bottom-4 right-4 z-30 p-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-2xl text-xs space-y-2 pointer-events-auto">
           {isSubsidenceSimActive && (
             <div className="flex items-center gap-1.5 pb-1.5 mb-1.5 border-b border-slate-200 dark:border-slate-700 text-red-500 font-bold text-[11px] animate-pulse">
               <AlertOctagon className="w-3.5 h-3.5" />
@@ -1661,12 +1672,12 @@ export function Mine3DScene() {
 
           {/* Extreme Bottom Right Checkbox: Transparent Overburden Strata Toggle */}
           <div className="pt-2 mt-1 border-t border-slate-200 dark:border-slate-800">
-            <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-800 dark:text-white hover:text-[#e64a19] transition-colors">
               <input
                 type="checkbox"
                 checked={isTransparentStrata}
                 onChange={(e) => toggleTransparentStrata(e.target.checked)}
-                className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-600 text-[#e64a19] focus:ring-[#e64a19] focus:ring-offset-0 bg-white dark:bg-slate-800 cursor-pointer accent-[#e64a19]"
+                className="w-4 h-4 rounded border-slate-400 dark:border-slate-600 text-[#e64a19] focus:ring-[#e64a19] focus:ring-offset-0 bg-white dark:bg-slate-800 cursor-pointer accent-[#e64a19]"
               />
               <span>Transparent Upper Strata</span>
             </label>
