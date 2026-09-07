@@ -1272,10 +1272,34 @@ proven; the firmware is the untested half. Before the demo, also resolve the
    - Stripped all explanatory essays, verbose calibration explanations, and filler boxes.
    - Refactored into modular components:
      - `UndergroundMetricCards`: 4 high-density metric cards (Pillar Microstrain [BF350+HX711], Roof Strata Tilt [MPU-6050], Strata Vibration [MPU-6050], Methane Gas [MQ-4]) with big bold values, clean status badges, and minimal visual gauges.
-     - `UndergroundGraphCard`: Minimal real-time area chart with 3 channel toggles.
-     - `UndergroundFleetTable`: Clean tabular summary.
-
 **Verification**: `npm run build` compiled 10/10 routes with zero errors. Next.js production server running on port 3005. Verified on `http://localhost:3005/dashboard`.
+
+### 2026-09-07 — 3D Mine Model Spacing Expansion & Vertical Strata De-congestion
+
+**User Request**:
+- "now lets come on 3d model , keep the diff between more , it looks so conjusted make it more good"
+- Increase the spacing/distance between elements to completely eliminate the cramped, congested look.
+- Increase the vertical elevation difference between the Surface and the Underground Seam so the 248m depth profile is clean, dramatic, and realistic.
+
+**What was built (`components/Mine3DScene.tsx`):**
+1. **Pillar & Gallery Spacing Expansion**:
+   - Expanded pillar center-to-center spacing from $4.6\text{ units}$ to **$6.4\text{ units}$**.
+   - With pillar size $2.2\text{m} \times 3.4\text{m} \times 2.2\text{m}$, the clear roadway and cross-cut gallery width widened from $2.5\text{m}$ to **$4.2\text{m}$**.
+   - TH-Yield steel arches now sit with $0.5\text{m}$ clearance on each side rather than clipping into pillar ribs.
+   - Haulage tracks, wooden sleepers ($1.8\text{m}$), and coal tub cart fit comfortably in the central roadway with ample inspector walking clearance.
+2. **Grand Vertical Strata Separation ("Diff Between More")**:
+   - Elevated the Above Surface & Overburden group from $y = 9.8$ to **$y = 17.5$** (creating a grand 14-unit vertical separation representing the 248m geological column).
+   - Added a vertical mine shaft casing with internal glowing fiber-optic telemetry conduit connecting Surface Station `SF-01` to Seam XII.
+   - Built a prominent Engineering Depth Ruler with color-coded statutory depth markers (`RL 0.0m Surface`, `RL -80m Sandstone`, `RL -160m Carbonaceous Shale`, `RL -248m Seam XII Extraction`).
+   - Added pithead telemetry station `SF-01` (solar panel, telemetry mast, and beacon) on surface terrain.
+   - Added real hardware probes (`BF350` strain probe with blinking LED) mounted directly on critical pillars `P-06` and `P-10`.
+3. **Camera & Visual Polish**:
+   - Updated camera presets (`iso`, `walk`, `top`, `side`) with widened framing and adjusted focal points.
+   - Expanded ground floor ($42 \times 42$) with subtle survey grid lines.
+   - Expanded mine roof ($38 \times 38$) with calibrated dynamic subsidence sag trough.
+
+**Verification**: `npm run build` compiled 10/10 routes with zero errors. Next.js server restarted on port 3005. Verified on `http://localhost:3005/model`.
+
 
 
 
