@@ -4,7 +4,128 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useDashboardStore } from '../lib/store';
-import { Rotate3d, Layers, Camera, AlertOctagon } from 'lucide-react';
+import { Rotate3d, Layers, Camera, AlertOctagon, Info, X } from 'lucide-react';
+
+export interface StrataLayerMetadata {
+  id: string;
+  name: string;
+  depthRL: string;
+  subTitle: string;
+  category: string;
+  colorHex: string;
+  badgeBg: string;
+  badgeText: string;
+  description: string;
+  engineeringProperties: {
+    label: string;
+    value: string;
+  }[];
+}
+
+const STRATA_LAYERS: Record<string, StrataLayerMetadata> = {
+  topsoil: {
+    id: 'topsoil',
+    name: 'Surface Pithead & Topsoil Strata',
+    depthRL: 'RL 0.0 m (Ground Datum)',
+    subTitle: 'Quaternary Alluvium & Surface Telemetry',
+    category: 'Overburden Strata',
+    colorHex: '#38bdf8',
+    badgeBg: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
+    badgeText: 'SURFACE DATUM',
+    description: 'Alluvial soil and weathered stratum hosting Station SF-01 pithead telemetry mast, InSAR satellite radar ground-truth markers, and precision differential GPS.',
+    engineeringProperties: [
+      { label: 'Lithology', value: 'Weathered Sand & Clay' },
+      { label: 'Thickness', value: '18 - 25 m' },
+      { label: 'Monitoring', value: 'InSAR Radar + SF-01' },
+      { label: 'Subsidence Threshold', value: '15.0 mm Alert' },
+    ],
+  },
+  sandstone: {
+    id: 'sandstone',
+    name: 'Barakar Sandstone Strata',
+    depthRL: 'RL -80.0 m Depth',
+    subTitle: 'Massive Coarse Sandstone Formation',
+    category: 'Overburden Strata',
+    colorHex: '#f59e0b',
+    badgeBg: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    badgeText: 'MAIN OVERBURDEN',
+    description: 'Thick competent sedimentary sandstone forming the primary overburden bridging beam. Resists caving until critical cantilever span is reached.',
+    engineeringProperties: [
+      { label: 'Compressive Strength', value: '45 - 65 MPa' },
+      { label: 'Young Modulus (E)', value: '12.4 GPa' },
+      { label: 'Strata Role', value: 'Structural Cantilever' },
+      { label: 'Caving Risk', value: 'Periodic Main Fall' },
+    ],
+  },
+  shale: {
+    id: 'shale',
+    name: 'Carbonaceous Shale & Mudstone',
+    depthRL: 'RL -160.0 m Depth',
+    subTitle: 'Impermeable Argillaceous Aquitard',
+    category: 'Impermeable Aquitard',
+    colorHex: '#a855f7',
+    badgeBg: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    badgeText: 'AQUITARD BARRIER',
+    description: 'Low-permeability fissile carbonaceous shale barrier protecting workings from upper water-bearing Barakar aquifers and dampening seismic shocks.',
+    engineeringProperties: [
+      { label: 'Permeability', value: '< 10⁻⁸ m/s (Sealed)' },
+      { label: 'Tensile Strength', value: '2.8 MPa' },
+      { label: 'Water Sealing', value: 'Hydrostatic Aquitard' },
+      { label: 'Shear Modulus', value: '4.2 GPa' },
+    ],
+  },
+  roof: {
+    id: 'roof',
+    name: 'Immediate Mine Roof Strata',
+    depthRL: 'RL -244.6 m Depth',
+    subTitle: 'Extraction Gallery Ceiling & Sag Zone',
+    category: 'Roof Transition',
+    colorHex: '#06b6d4',
+    badgeBg: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+    badgeText: 'ACTIVE ROOF HORIZON',
+    description: 'Deformable immediate roof horizon directly overlying Seam XII. Reinforced with resin cable bolts; continuously tracked for bed separation and sag troughing.',
+    engineeringProperties: [
+      { label: 'Deformation Model', value: 'Elastic Sag Trough' },
+      { label: 'Support System', value: 'Resin Cable Bolting 2.4m' },
+      { label: 'Allowable Sag', value: '5.0 mm Max DGMS' },
+      { label: 'FEA Mesh', value: 'Dynamic Convergence' },
+    ],
+  },
+  floor: {
+    id: 'floor',
+    name: 'Seam XII Extraction Horizon',
+    depthRL: 'RL -248.0 m Working Seam',
+    subTitle: 'Working Seam Floor & Haulage Gallery',
+    category: 'Extraction Seam',
+    colorHex: '#ef4444',
+    badgeBg: 'bg-red-500/20 text-red-400 border-red-500/30',
+    badgeText: 'MINING HORIZON',
+    description: 'Sub-bituminous coal seam extraction horizon featuring 16 room-and-pillar blocks, 4.2m haulage galleries, steel TH-yield arches, and rail transport lines.',
+    engineeringProperties: [
+      { label: 'Roadway Spacing', value: '6.4 m Grid (4.2m Clear)' },
+      { label: 'Pillar Dimension', value: '2.2m × 3.4m × 2.2m' },
+      { label: 'Floor Heave', value: 'Monitored (Stable)' },
+      { label: 'DGMS Standard', value: 'Reg 111 Coal Mines' },
+    ],
+  },
+  shaft: {
+    id: 'shaft',
+    name: 'Telemetry Shaft & Borehole Conduit',
+    depthRL: 'RL 0.0 to -248.0 m',
+    subTitle: 'Borehole Telemetry & Power Riser',
+    category: 'Infrastructure',
+    colorHex: '#10b981',
+    badgeBg: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+    badgeText: 'DATA CONDUIT',
+    description: 'Cased vertical bore connecting pithead communication hub to gallery junction boxes. Houses RS-485 Modbus telemetry and optical strain fibers.',
+    engineeringProperties: [
+      { label: 'Casing Diameter', value: '1.6 m Steel-Cased' },
+      { label: 'Signal Transit', value: 'Fiber-Optic RS-485' },
+      { label: 'Depth Span', value: '248.0 m Column' },
+      { label: 'Health Status', value: 'Signal 99.8% Nominal' },
+    ],
+  },
+};
 
 // Procedural texture generators for realistic coal, rock, and strata
 function createProceduralCoalTexture(width = 512, height = 512): THREE.CanvasTexture {
@@ -141,6 +262,11 @@ export function Mine3DScene() {
 
   const selectedPillar = pillars.find(p => p.id === selectedPillarId) || pillars[5];
 
+  // Active strata layer inspection state (hover preview or pinned click)
+  const [activeLayer, setActiveLayer] = useState<{ layer: StrataLayerMetadata; pinned: boolean } | null>(null);
+  const isLayerPinnedRef = useRef(false);
+  isLayerPinnedRef.current = activeLayer?.pinned ?? false;
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -264,6 +390,7 @@ export function Mine3DScene() {
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = 0;
     floor.receiveShadow = true;
+    floor.userData = { layerId: 'floor' };
     scene.add(floor);
 
     // Subtle survey grid on floor
@@ -382,6 +509,7 @@ export function Mine3DScene() {
     roof.rotation.x = Math.PI / 2;
     roof.position.y = 3.4;
     roof.receiveShadow = true;
+    roof.userData = { layerId: 'roof' };
     scene.add(roof);
 
     // =========================================================================
@@ -400,6 +528,7 @@ export function Mine3DScene() {
     });
     const topsoil = new THREE.Mesh(topsoilGeo, topsoilMat);
     topsoil.position.y = 0;
+    topsoil.userData = { layerId: 'topsoil' };
     surfaceGroup.add(topsoil);
 
     // Surface InSAR Satellite Radar Deformation Contour Rings
@@ -465,6 +594,7 @@ export function Mine3DScene() {
     });
     const sandstone = new THREE.Mesh(sandstoneGeo, sandstoneMat);
     sandstone.position.y = -3.2;
+    sandstone.userData = { layerId: 'sandstone' };
     surfaceGroup.add(sandstone);
 
     // Stratified Geological Layer 2: Carbonaceous Shale & Mudstone (RL -160m)
@@ -477,6 +607,7 @@ export function Mine3DScene() {
     });
     const shale = new THREE.Mesh(shaleGeo, shaleMat);
     shale.position.y = -7.2;
+    shale.userData = { layerId: 'shale' };
     surfaceGroup.add(shale);
 
     // Vertical Shaft Casing connecting Surface to Seam XII
@@ -489,6 +620,7 @@ export function Mine3DScene() {
     });
     const shaftCasing = new THREE.Mesh(shaftGeo, shaftMat);
     shaftCasing.position.set(-12.0, -7.05, -12.0);
+    shaftCasing.userData = { layerId: 'shaft' };
     surfaceGroup.add(shaftCasing);
 
     // Glowing telemetry fiber-optic conduit inside shaft
@@ -625,28 +757,138 @@ export function Mine3DScene() {
       pillarMeshes.set(p.id, mesh);
     });
 
-    // 15. Raycasting for Mouse Interaction
+    // 15. Raycasting for Mouse Interaction (Pillars + Strata Layers with 2s Hover & Click)
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
+    let hoverTimer: NodeJS.Timeout | null = null;
+    let hoveredLayerId: string | null = null;
+    const pointerDownPos = { x: 0, y: 0 };
+    const layerMeshes: THREE.Mesh[] = [floor, roof, topsoil, sandstone, shale, shaftCasing];
 
-    const onPointerDown = (event: MouseEvent) => {
+    const getRaycastHits = (clientX: number, clientY: number) => {
       const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(Array.from(pillarMeshes.values()));
 
+      // Filter layer meshes: only include meshes whose ancestors and self are visible
+      const visibleLayerMeshes = layerMeshes.filter(m => {
+        if (!m.visible) return false;
+        let p = m.parent;
+        while (p && p !== scene) {
+          if (!p.visible) return false;
+          p = p.parent;
+        }
+        return true;
+      });
+
+      const targets = [...Array.from(pillarMeshes.values()), ...visibleLayerMeshes];
+      return raycaster.intersectObjects(targets);
+    };
+
+    const clearHoverTimer = () => {
+      if (hoverTimer) {
+        clearTimeout(hoverTimer);
+        hoverTimer = null;
+      }
+    };
+
+    const onPointerDown = (event: MouseEvent) => {
+      pointerDownPos.x = event.clientX;
+      pointerDownPos.y = event.clientY;
+      clearHoverTimer();
+    };
+
+    const onPointerMove = (event: MouseEvent) => {
+      // If buttons !== 0, user is dragging OrbitControls (rotating or panning).
+      // Never trigger hover while the user is actively manipulating the camera!
+      if (event.buttons !== 0) {
+        clearHoverTimer();
+        hoveredLayerId = null;
+        return;
+      }
+
+      const intersects = getRaycastHits(event.clientX, event.clientY);
+
+      if (intersects.length > 0) {
+        const topHit = intersects[0].object as THREE.Mesh;
+        const layerId = topHit.userData.layerId as string | undefined;
+
+        if (layerId && STRATA_LAYERS[layerId]) {
+          if (hoveredLayerId !== layerId) {
+            clearHoverTimer();
+            hoveredLayerId = layerId;
+
+            // Trigger layer info after 2 seconds (2000ms) of steady hover
+            hoverTimer = setTimeout(() => {
+              if (!isLayerPinnedRef.current) {
+                setActiveLayer({ layer: STRATA_LAYERS[layerId], pinned: false });
+              }
+            }, 2000);
+          }
+          return;
+        }
+      }
+
+      // If hovering empty space or a pillar:
+      clearHoverTimer();
+      hoveredLayerId = null;
+      // If there is an active hover preview that wasn't pinned by a click, dismiss it smoothly
+      if (!isLayerPinnedRef.current) {
+        setActiveLayer(null);
+      }
+    };
+
+    const onPointerUp = (event: MouseEvent) => {
+      clearHoverTimer();
+
+      // Check drag distance threshold
+      const dist = Math.hypot(event.clientX - pointerDownPos.x, event.clientY - pointerDownPos.y);
+      if (dist >= 6) {
+        // Was an OrbitControls drag (orbit, pan, or gesture) - ignore click!
+        return;
+      }
+
+      // Valid intentional click!
+      const intersects = getRaycastHits(event.clientX, event.clientY);
       if (intersects.length > 0) {
         const hit = intersects[0].object as THREE.Mesh;
         const pId = hit.userData.pillarId;
+        const layerId = hit.userData.layerId;
+
         if (pId) {
+          // Clicked a pillar: select pillar for HUD and dismiss layer card
           selectPillarRef.current(pId);
+          setActiveLayer(null);
+          return;
+        }
+
+        if (layerId && STRATA_LAYERS[layerId]) {
+          // Clicked a strata layer: immediately pin layer info card!
+          setActiveLayer({ layer: STRATA_LAYERS[layerId], pinned: true });
+          return;
+        }
+      } else {
+        // Clicked empty background: dismiss pinned card if open
+        if (isLayerPinnedRef.current) {
+          setActiveLayer(null);
         }
       }
     };
 
+    const onPointerLeave = () => {
+      clearHoverTimer();
+      hoveredLayerId = null;
+      if (!isLayerPinnedRef.current) {
+        setActiveLayer(null);
+      }
+    };
+
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointermove', onPointerMove);
+    renderer.domElement.addEventListener('pointerup', onPointerUp);
+    renderer.domElement.addEventListener('pointerleave', onPointerLeave);
 
     // 16. Window Resize
     const handleResize = () => {
@@ -746,6 +988,10 @@ export function Mine3DScene() {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+      renderer.domElement.removeEventListener('pointermove', onPointerMove);
+      renderer.domElement.removeEventListener('pointerup', onPointerUp);
+      renderer.domElement.removeEventListener('pointerleave', onPointerLeave);
+      clearHoverTimer();
       renderer.dispose();
       if (container && renderer.domElement) {
         container.removeChild(renderer.domElement);
@@ -859,31 +1105,91 @@ export function Mine3DScene() {
           </div>
         </div>
 
-        {/* Geological Depth Scale Watermark Indicator */}
-        <div className="absolute top-20 right-4 p-3 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 shadow-lg text-[11px] font-mono space-y-1 pointer-events-none hidden md:block">
-          <div className="text-[10px] uppercase font-bold text-slate-400 mb-1 border-b border-slate-200 dark:border-slate-700 pb-0.5">
-            Strata Lithology Profile
+        {/* Dynamic Strata Layer Inspector Card (2-Second Hover or Click) */}
+        {activeLayer ? (
+          <div
+            className={`absolute top-16 right-4 z-20 max-w-sm w-80 p-4 rounded-2xl backdrop-blur-xl border shadow-2xl transition-all duration-200 animate-in fade-in slide-in-from-top-2 pointer-events-auto ${
+              isDarkMode
+                ? 'bg-slate-900/95 border-slate-800 text-slate-100 shadow-black/60'
+                : 'bg-white/95 border-slate-200 text-slate-900 shadow-slate-300/70'
+            }`}
+          >
+            {/* Header: Status badge & Dismiss button */}
+            <div className="flex items-center justify-between gap-2 pb-2 mb-2.5 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="w-2.5 h-2.5 rounded-full animate-pulse"
+                  style={{ backgroundColor: activeLayer.layer.colorHex }}
+                />
+                <span
+                  className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full border ${activeLayer.layer.badgeBg}`}
+                >
+                  {activeLayer.layer.badgeText}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-slate-400">
+                  {activeLayer.pinned ? '📌 Pinned' : '⏱️ 2s Dwell'}
+                </span>
+                <button
+                  onClick={() => setActiveLayer(null)}
+                  className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  aria-label="Close strata inspector"
+                  title="Close strata inspector"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Layer Title & Elevation Datum */}
+            <div className="mb-2.5">
+              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-snug">
+                {activeLayer.layer.name}
+              </h4>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[11px] font-mono font-semibold text-[#e64a19] dark:text-[#ff7a45]">
+                  {activeLayer.layer.depthRL}
+                </span>
+                <span className="text-[10px] text-slate-400">• {activeLayer.layer.category}</span>
+              </div>
+            </div>
+
+            {/* Geological Description */}
+            <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300 mb-3 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+              {activeLayer.layer.description}
+            </p>
+
+            {/* Engineering Specifications Grid */}
+            <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono mb-2.5">
+              {activeLayer.layer.engineeringProperties.map((prop, idx) => (
+                <div
+                  key={idx}
+                  className="p-1.5 rounded-lg bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50"
+                >
+                  <span className="text-slate-400 block text-[9px] font-sans truncate">{prop.label}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
+                    {prop.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer Interaction Tip */}
+            <div className="text-[10px] text-slate-400 pt-1.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <span>{activeLayer.pinned ? 'Click canvas or ✕ to dismiss' : 'Click layer to keep pinned'}</span>
+              <span className="text-[9px] uppercase tracking-wider font-semibold text-slate-500">
+                Strata Radar
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-sky-600 dark:text-sky-400">
-            <span className="w-2 h-2 rounded-full bg-sky-500" />
-            <span>RL 0.0m: Pithead Ground Surface</span>
+        ) : (
+          /* Discreet Discoverability Hint when no layer is active */
+          <div className="absolute top-16 right-4 pointer-events-none hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 shadow-md text-[11px] text-slate-500 dark:text-slate-400 font-mono transition-opacity duration-300">
+            <Info className="w-3.5 h-3.5 text-[#e64a19]" />
+            <span>Hover layer 2s or click to inspect strata</span>
           </div>
-          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
-            <span>RL -80m: Sandstone Overburden</span>
-          </div>
-          <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
-            <span className="w-2 h-2 rounded-full bg-purple-500" />
-            <span>RL -160m: Carbonaceous Shale</span>
-          </div>
-          <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
-            <span className="w-2 h-2 rounded-full bg-red-500" />
-            <span>RL -248m: Seam XII Room-and-Pillar</span>
-          </div>
-          <div className="pt-1 border-t border-slate-200 dark:border-slate-700 text-[10px] text-slate-400">
-            Roadway Spacing: 6.4m • Clear Width: 4.2m
-          </div>
-        </div>
+        )}
 
         {/* Selected Pillar Inspector Hologram HUD */}
         <div className="absolute bottom-4 left-4 p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 shadow-2xl max-w-sm pointer-events-auto">
