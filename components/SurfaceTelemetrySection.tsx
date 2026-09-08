@@ -51,7 +51,7 @@ export function SurfaceMetricCards() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
       {/* 1. Linear Potentiometer — Ground Subsidence */}
-      <div className="bg-white dark:bg-[#111726] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-all hover:border-sky-300 dark:hover:border-sky-800/80">
+      <div className="bg-white dark:bg-[#0b111b] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-all hover:border-sky-300 dark:hover:border-sky-800/80">
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
@@ -108,7 +108,7 @@ export function SurfaceMetricCards() {
       </div>
 
       {/* 2. MPU-6050 — Surface Slope Tilt */}
-      <div className="bg-white dark:bg-[#111726] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-all hover:border-violet-300 dark:hover:border-violet-800/80">
+      <div className="bg-white dark:bg-[#0b111b] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-all hover:border-violet-300 dark:hover:border-violet-800/80">
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
@@ -175,7 +175,7 @@ export function SurfaceMetricCards() {
       </div>
 
       {/* 3. MPU-6050 — Surface Vibration (PPV) */}
-      <div className="bg-white dark:bg-[#111726] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-all hover:border-rose-300 dark:hover:border-rose-800/80">
+      <div className="bg-white dark:bg-[#0b111b] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-all hover:border-rose-300 dark:hover:border-rose-800/80">
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
@@ -254,7 +254,7 @@ export function SurfaceGraphCard() {
   const surfVib = latestPoint.surfaceVibrationMms ?? 0.08;
 
   return (
-    <div className="bg-white dark:bg-[#111726] rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
+    <div className="bg-white dark:bg-[#0b111b] rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <ChartIcon className="w-4 h-4 text-sky-500" />
@@ -429,7 +429,7 @@ export function SurfaceFleetTable() {
   );
 
   return (
-    <div className="bg-white dark:bg-[#111726] rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
+    <div className="bg-white dark:bg-[#0b111b] rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
       <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-100 dark:border-slate-800/80">
         <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
           Surface Telemetry Fleet ({surfaceNodes.length} Sensors)

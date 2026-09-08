@@ -39,7 +39,7 @@ export function RiskGaugeCard() {
     : '#f95721';
 
   return (
-    <div className="bg-white dark:bg-[#111726] rounded-2xl p-5 border border-gray-100 dark:border-slate-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between transition-colors">
+    <div className="bg-white dark:bg-[#0b111b] rounded-2xl p-5 border border-gray-100 dark:border-slate-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between transition-colors">
       <div>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">

@@ -88,7 +88,7 @@ export default function AlertsPage() {
       {/* Main Grid: Alerts List & Evacuation Checklist */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Alerts Log */}
-        <div className="lg:col-span-2 bg-white dark:bg-[#111726] rounded-2xl p-6 border border-gray-100 dark:border-slate-800 shadow-soft">
+        <div className="lg:col-span-2 bg-white dark:bg-[#0b111b] rounded-2xl p-6 border border-gray-100 dark:border-slate-800 shadow-soft">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-bold text-gray-900 dark:text-white">
               Incident Broadcast Stream
@@ -179,7 +179,7 @@ export default function AlertsPage() {
         </div>
 
         {/* Right Col: DGMS Evacuation SOP Checklist */}
-        <div className="bg-white dark:bg-[#111726] rounded-2xl p-6 border border-gray-100 dark:border-slate-800 shadow-soft flex flex-col justify-between">
+        <div className="bg-white dark:bg-[#0b111b] rounded-2xl p-6 border border-gray-100 dark:border-slate-800 shadow-soft flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-3">
               <ShieldAlert className="w-5 h-5 text-safety-500" />

@@ -59,7 +59,7 @@ export default function TrendsPage() {
 
       {/* Analytics Summary Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-[#111726] p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-soft">
+        <div className="bg-white dark:bg-[#0b111b] p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-soft">
           <div className="flex items-center gap-2 text-xs font-bold text-gray-500 dark:text-slate-400 mb-1">
             <Activity className="w-4 h-4 text-safety-500" />
             <span>Peak Microstrain in 24h</span>
@@ -72,7 +72,7 @@ export default function TrendsPage() {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-[#111726] p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-soft">
+        <div className="bg-white dark:bg-[#0b111b] p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-soft">
           <div className="flex items-center gap-2 text-xs font-bold text-gray-500 dark:text-slate-400 mb-1">
             <Gauge className="w-4 h-4 text-amber-500" />
             <span>Max Differential Roof Tilt</span>
@@ -85,7 +85,7 @@ export default function TrendsPage() {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-[#111726] p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-soft">
+        <div className="bg-white dark:bg-[#0b111b] p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-soft">
           <div className="flex items-center gap-2 text-xs font-bold text-gray-500 dark:text-slate-400 mb-1">
             <Radio className="w-4 h-4 text-purple-500" />
             <span>Seismic Energy Release RMS</span>

@@ -26,7 +26,7 @@ export function TelemetryChart() {
 
   if (!mounted) {
     return (
-      <div className="bg-white dark:bg-[#111726] rounded-2xl p-6 border border-gray-100 dark:border-slate-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] h-[380px] flex items-center justify-center">
+      <div className="bg-white dark:bg-[#0b111b] rounded-2xl p-6 border border-gray-100 dark:border-slate-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] h-[380px] flex items-center justify-center">
         <div className="text-xs text-gray-400">Loading real-time telemetry stream...</div>
       </div>
     );
@@ -93,7 +93,7 @@ export function TelemetryChart() {
   const latestVal = lastPoint ? Number(lastPoint[currentCfg.dataKey] ?? lastPoint.strainMicrostrain ?? 0) : 0;
 
   return (
-    <div className="bg-white dark:bg-[#111726] rounded-2xl p-6 border border-gray-100 dark:border-slate-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-colors flex flex-col justify-between">
+    <div className="bg-white dark:bg-[#0b111b] rounded-2xl p-6 border border-gray-100 dark:border-slate-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-colors flex flex-col justify-between">
       {/* Top Controls Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>

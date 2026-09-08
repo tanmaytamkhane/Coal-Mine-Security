@@ -60,7 +60,7 @@ export function UndergroundMetricCards() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
       {/* 1. BF350 Strain Gauge + HX711 24-bit ADC — Pillar Microstrain */}
-      <div className="bg-white dark:bg-[#111726] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+      <div className="bg-white dark:bg-[#0b111b] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
@@ -114,7 +114,7 @@ export function UndergroundMetricCards() {
       </div>
 
       {/* 2. MPU-6050 — Roof Strata Tilt */}
-      <div className="bg-white dark:bg-[#111726] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+      <div className="bg-white dark:bg-[#0b111b] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
@@ -172,7 +172,7 @@ export function UndergroundMetricCards() {
       </div>
 
       {/* 3. MPU-6050 — Strata Shock & Vibration (PPV) */}
-      <div className="bg-white dark:bg-[#111726] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+      <div className="bg-white dark:bg-[#0b111b] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
@@ -229,7 +229,7 @@ export function UndergroundMetricCards() {
       </div>
 
       {/* 4. MQ-4 Catalytic Methane Gas (CH4) */}
-      <div className="bg-white dark:bg-[#111726] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+      <div className="bg-white dark:bg-[#0b111b] rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
@@ -305,7 +305,7 @@ export function UndergroundGraphCard() {
   const methane = latestPoint.methanePctLel ?? 0.22;
 
   return (
-    <div className="bg-white dark:bg-[#111726] rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
+    <div className="bg-white dark:bg-[#0b111b] rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <ChartIcon className="w-4 h-4 text-[#e64a19]" />
@@ -516,7 +516,7 @@ export function UndergroundFleetTable() {
   );
 
   return (
-    <div className="bg-white dark:bg-[#111726] rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
+    <div className="bg-white dark:bg-[#0b111b] rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
       <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-100 dark:border-slate-800/80">
         <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
           Underground Seam XII Nodes ({undergroundNodes.length})

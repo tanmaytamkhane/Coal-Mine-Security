@@ -32,7 +32,7 @@ export default function AboutPage() {
       {/* 4 Pillars of Architecture */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Card 1: Sensor Array */}
-        <div className="bg-white dark:bg-[#111726] rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-soft">
+        <div className="bg-white dark:bg-[#0b111b] rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-soft">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-safety-500/10 text-safety-600 flex items-center justify-center">
               <Layers className="w-5 h-5" />
@@ -59,7 +59,7 @@ export default function AboutPage() {
         </div>
 
         {/* Card 2: Hybrid Physics-ML */}
-        <div className="bg-white dark:bg-[#111726] rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-soft">
+        <div className="bg-white dark:bg-[#0b111b] rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-soft">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
               <Cpu className="w-5 h-5" />
@@ -78,7 +78,7 @@ export default function AboutPage() {
         </div>
 
         {/* Card 3: Dual-Tier Networking */}
-        <div className="bg-white dark:bg-[#111726] rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-soft">
+        <div className="bg-white dark:bg-[#0b111b] rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-soft">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center">
               <Radio className="w-5 h-5" />
@@ -94,7 +94,7 @@ export default function AboutPage() {
         </div>
 
         {/* Card 4: Satellite Layer */}
-        <div className="bg-white dark:bg-[#111726] rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-soft">
+        <div className="bg-white dark:bg-[#0b111b] rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-soft">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
               <Satellite className="w-5 h-5" />

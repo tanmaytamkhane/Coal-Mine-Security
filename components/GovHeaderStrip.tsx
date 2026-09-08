@@ -3,33 +3,37 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Clock } from 'lucide-react';
 
+function formatPortalTime() {
+  const now = new Date();
+  return (
+    now.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }) +
+    ' | ' +
+    now.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }) +
+    ' IST'
+  );
+}
+
 export function GovHeaderStrip() {
-  const [timeString, setTimeString] = useState<string>('');
+  const [timeString, setTimeString] = useState<string>(() => formatPortalTime());
 
   useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setTimeString(
-        now.toLocaleDateString('en-IN', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        }) + ' | ' +
-        now.toLocaleTimeString('en-IN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false,
-        }) + ' IST'
-      );
-    };
+    const updateTime = () => setTimeString(formatPortalTime());
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="w-full bg-[#080d19] text-slate-200 text-[11px] border-b border-slate-800/80 select-none">
+    <div className="w-full bg-[#05070b] text-slate-200 text-[11px] border-b border-slate-800/80 select-none">
       {/* Tricolor Ribbon Bar (Saffron, White, Green) */}
       <div className="h-[3px] w-full flex">
         <div className="w-1/3 bg-[#FF9933]" />
@@ -55,7 +59,9 @@ export function GovHeaderStrip() {
           </div>
           <div className="hidden sm:flex items-center gap-1 text-slate-400">
             <Clock className="w-3 h-3 text-slate-400" />
-            <span className="font-mono text-slate-200">{timeString || 'Loading...'}</span>
+            <span className="font-mono text-slate-200" suppressHydrationWarning>
+              {timeString}
+            </span>
           </div>
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />

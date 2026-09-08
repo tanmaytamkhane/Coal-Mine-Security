@@ -58,7 +58,7 @@ export function CoalfieldMap() {
   return (
     <div className="space-y-4">
       {/* Coalfield Switcher & Action Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white dark:bg-[#111726] p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-soft">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white dark:bg-[#0b111b] p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-soft">
         {/* Mine Location Info */}
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-[#e64a19]">
@@ -202,7 +202,7 @@ export function CoalfieldMap() {
       </div>
 
       {/* Satellite InSAR & Geotechnical Status Banner */}
-      <div className="bg-white dark:bg-[#111726] p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-soft grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+      <div className="bg-white dark:bg-[#0b111b] p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-soft grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
         <div className="flex items-center gap-2.5">
           <Satellite className="w-4 h-4 text-safety-500 shrink-0" />
           <div>

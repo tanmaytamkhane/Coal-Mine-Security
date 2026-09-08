@@ -17,25 +17,22 @@ import { COALFIELD_ZONES } from '../lib/constants';
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-slate-800/80 bg-[#0c1322] text-slate-400 transition-colors">
+    <footer className="mt-auto border-t border-slate-800/80 bg-[#080d14] text-slate-400 transition-colors">
       {/* Sleek Top Banner: Brand + Rescue Cell Contact */}
       <div className="border-b border-slate-800/60 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           {/* Brand & Mission Statement */}
           <div className="space-y-1.5 max-w-xl">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#e64a19] text-white flex items-center justify-center shadow-md shadow-[#e64a19]/20 font-bold">
+              <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shadow-md shadow-amber-500/20 font-black">
                 <Building2 className="w-4 h-4" />
               </div>
               <span className="text-base font-black text-white tracking-tight">
                 NMS-SEWS
               </span>
-              <span className="text-xs px-2 py-0.5 rounded-full font-mono bg-slate-800 text-slate-300 border border-slate-700/60 font-semibold">
-                v2.4.1
-              </span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
-              National Mine Strata Early Warning System — Real-time IoT geotechnical telemetry,
+              National Mine Strata Early Warning System for real-time IoT geotechnical telemetry,
               InSAR satellite interferometry, and predictive subsidence modeling under DGMS statutory directives.
             </p>
           </div>
@@ -59,7 +56,7 @@ export function Footer() {
           {/* Col 1: Platform Modules */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4 font-mono flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5 text-[#e64a19]" />
+              <Activity className="w-3.5 h-3.5 text-amber-500" />
               Platform
             </h4>
             <ul className="space-y-2.5 text-xs">
@@ -124,8 +121,8 @@ export function Footer() {
                     href="/map"
                     className="hover:text-amber-400 text-slate-300 transition-colors flex items-center justify-between group"
                   >
-                    <span className="truncate pr-2">{zone.name.split('—')[0]}</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 group-hover:bg-[#e64a19]/20 group-hover:text-amber-400 transition-colors shrink-0 border border-slate-700/60">
+                    <span className="truncate pr-2">{zone.name.split(/\s-\s|\s\u2014\s/)[0]}</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 group-hover:bg-amber-500/20 group-hover:text-amber-400 transition-colors shrink-0 border border-slate-700/60">
                       {zone.state}
                     </span>
                   </Link>
@@ -181,7 +178,7 @@ export function Footer() {
               </p>
               <p className="text-slate-400 text-[11px] leading-relaxed">
                 Ministry of Coal, Government of India<br />
-                Headquarters: Dhanbad, Jharkhand — 826001
+                Headquarters: Dhanbad, Jharkhand 826001
               </p>
               <div className="pt-2 text-[11px] font-mono text-slate-400 space-y-1">
                 <div className="flex items-center gap-1.5">
@@ -204,12 +201,12 @@ export function Footer() {
           </p>
 
           <div className="flex items-center gap-4 text-[11px] font-mono">
-            <span className="text-[#e64a19] font-bold">SIH26025</span>
-            <span className="text-slate-700">•</span>
+            <span className="text-amber-400 font-bold">SIH26025</span>
+            <span className="h-4 w-px bg-slate-700" />
             <Link href="/about" className="hover:text-white transition-colors">
               Documentation
             </Link>
-            <span className="text-slate-700">•</span>
+            <span className="h-4 w-px bg-slate-700" />
             <Link href="/dashboard" className="hover:text-white transition-colors">
               Console
             </Link>

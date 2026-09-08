@@ -11,7 +11,7 @@ const Mine3DScene = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[640px] lg:h-[700px] xl:h-[760px] w-full rounded-3xl bg-white dark:bg-[#111726] border border-gray-200 dark:border-slate-800 flex items-center justify-center text-xs text-gray-400">
+      <div className="h-[640px] lg:h-[700px] xl:h-[760px] w-full rounded-3xl bg-white dark:bg-[#0b111b] border border-gray-200 dark:border-slate-800 flex items-center justify-center text-xs text-gray-400">
         Loading 3D Coal Mine WebGL Environment...
       </div>
     )

@@ -39,7 +39,7 @@ export default function MapPage() {
             <PillarGrid />
           </div>
 
-          <div className="lg:col-span-1 bg-white dark:bg-[#111726] rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-soft space-y-4">
+          <div className="lg:col-span-1 bg-white dark:bg-[#0b111b] rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-soft space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
               <span className="font-bold text-sm text-gray-900 dark:text-white">Panel XII-A Geotechnical Specs</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-bold">

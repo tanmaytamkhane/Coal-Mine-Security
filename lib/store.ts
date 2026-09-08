@@ -145,7 +145,7 @@ export function generateRandomDrillAnomalies() {
 }
 
 export const useDashboardStore = create<DashboardState>((set, get) => ({
-  isDarkMode: false,
+  isDarkMode: true,
   selectedCoalfield: COALFIELD_ZONES[0].id,
   isSubsidenceSimActive: false,
   simProgress: 0,

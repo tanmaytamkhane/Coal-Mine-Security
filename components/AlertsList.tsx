@@ -15,7 +15,7 @@ export function AlertsList() {
   });
 
   return (
-    <div className="bg-white dark:bg-[#111726] rounded-2xl p-6 border border-gray-100 dark:border-slate-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-colors flex flex-col justify-between">
+    <div className="bg-white dark:bg-[#0b111b] rounded-2xl p-6 border border-gray-100 dark:border-slate-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-colors flex flex-col justify-between">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
